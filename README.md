@@ -13,5 +13,6 @@ An interactive five-year compensation calculator for comparing job offers and un
 - Target-gap and compensation-cliff analysis
 - Scenario search across configurable base, equity, and sign-on ranges
 - Target-band scatter plot, distribution chart, and closest package matches
+- Sortable package results with drill-down from distribution bars
 
 OfferLab runs entirely in the browser. No compensation data is uploaded or stored.
