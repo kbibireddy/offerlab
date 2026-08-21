@@ -4,7 +4,8 @@ An interactive five-year compensation calculator for comparing job offers and un
 
 ## Features
 
-- Configurable company, role, and currency
+- Slider controls for every compensation input
+- Configurable currency
 - Base salary growth and target bonus calculations
 - Custom stock vesting schedules
 - Sign-on payments, refresh equity, and other cash by year
