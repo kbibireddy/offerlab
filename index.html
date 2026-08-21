@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive five-year compensation and offer negotiation calculator">
+  <title>OfferLab — Compensation Calculator</title>
+  <style>
+    :root {
+      --ink: #17211b;
+      --muted: #66736b;
+      --paper: #f4f1e9;
+      --card: #fffdf8;
+      --line: #d9d8cf;
+      --green: #174f3d;
+      --green-2: #26765b;
+      --lime: #d8f36b;
+      --coral: #ed765e;
+      --blue: #4f76a8;
+      --gold: #d7a53d;
+      --shadow: 0 12px 36px rgba(31, 45, 37, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(216, 243, 107, 0.24), transparent 28rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .shell {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 26px 0 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 13px;
+      color: white;
+      background: var(--green);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 30px 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.5rem, 6vw, 5.7rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.94;
+    }
+
+    .intro {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .reset {
+      flex: 0 0 auto;
+      margin-top: 8px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      background: rgba(255,255,255,.55);
+      font-weight: 700;
+    }
+
+    .reset:hover { background: white; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(310px, 0.72fr) minmax(560px, 1.55fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid rgba(23, 33, 27, 0.09);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      position: sticky;
+      top: 18px;
+      padding: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--green-2);
+      font-size: .75rem;
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h2, h3 { margin: 0; letter-spacing: -.025em; }
+    h2 { font-size: 1.45rem; }
+    h3 { font-size: 1rem; }
+
+    .helper {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .section {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 750;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-top: 5px;
+    }
+
+    .input-wrap span {
+      position: absolute;
+      top: 50%;
+      left: 11px;
+      color: var(--muted);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .input-wrap .suffix { right: 11px; left: auto; }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      height: 42px;
+      padding: 8px 10px 8px 27px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      color: var(--ink);
+      background: white;
+      font-weight: 750;
+    }
+
+    input[type="text"],
+    select { padding-left: 10px; }
+
+    select { cursor: pointer; }
+
+    input.percent { padding-right: 30px; padding-left: 10px; }
+
+    input:focus {
+      border-color: var(--green-2);
+      box-shadow: 0 0 0 3px rgba(38, 118, 91, .13);
+    }
+
+    .year-inputs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .year-inputs label { text-align: center; }
+    .year-inputs input {
+      height: 38px;
+      margin-top: 4px;
+      padding: 6px;
+      text-align: center;
+      font-size: .78rem;
+    }
+
+    .year-inputs .money input { padding-left: 14px; }
+
+    .results {
+      display: grid;
+      gap: 18px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .metric {
+      min-height: 142px;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .metric.primary {
+      color: white;
+      background: var(--green);
+    }
+
+    .metric .label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 750;
+    }
+
+    .metric.primary .label { color: rgba(255,255,255,.7); }
+
+    .metric .value {
+      margin-top: 18px;
+      font-size: clamp(2rem, 4vw, 3.15rem);
+      font-weight: 850;
+      letter-spacing: -.055em;
+      line-height: 1;
+    }
+
+    .metric .sub {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .metric.primary .sub { color: rgba(255,255,255,.68); }
+
+    .target-line {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .target-line input {
+      width: 82px;
+      height: 31px;
+      padding: 4px 7px 4px 19px;
+      border-radius: 8px;
+      font-size: .78rem;
+    }
+
+    .target-line .input-wrap { margin: 0; }
+    .target-line .input-wrap span { left: 7px; }
+
+    .chart-panel, .table-panel, .insight-panel { padding: 22px; }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 700;
+    }
+
+    .legend span::before {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 5px;
+      border-radius: 2px;
+      content: "";
+    }
+
+    .legend .base::before { background: var(--green); }
+    .legend .bonus::before { background: var(--gold); }
+    .legend .stock::before { background: var(--blue); }
+    .legend .signon::before { background: var(--coral); }
+    .legend .other::before { background: #9f80bd; }
+    .legend .other-cash::before { background: #55a6a6; }
+
+    .chart {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 13px;
+      height: 280px;
+      padding-top: 18px;
+      border-bottom: 1px solid var(--line);
+      background: repeating-linear-gradient(to bottom, transparent 0, transparent 59px, rgba(23,33,27,.06) 60px);
+    }
+
+    .bar-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    .bar-total {
+      margin-bottom: 7px;
+      text-align: center;
+      font-size: .77rem;
+      font-weight: 850;
+    }
+
+    .bar {
+      display: flex;
+      flex-direction: column-reverse;
+      width: min(64px, 72%);
+      min-height: 2px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 8px 8px 0 0;
+      transition: height .28s ease;
+    }
+
+    .segment { width: 100%; min-height: 0; transition: height .28s ease; }
+    .segment.base { background: var(--green); }
+    .segment.bonus { background: var(--gold); }
+    .segment.stock { background: var(--blue); }
+    .segment.signon { background: var(--coral); }
+    .segment.other { background: #9f80bd; }
+    .segment.otherCash { background: #55a6a6; }
+
+    .chart-years {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 13px;
+      padding-top: 9px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .75rem;
+      font-weight: 750;
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    th {
+      color: var(--muted);
+      font-size: .72rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    td { font-size: .84rem; }
+    tr:last-child td { border: 0; }
+    tr.total-row td { font-weight: 850; }
+
+    .insight-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      background: #eef0e7;
+    }
+
+    .callout {
+      padding-left: 15px;
+      border-left: 3px solid var(--lime);
+    }
+
+    .callout p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .gap-value { color: var(--coral); }
+    .positive { color: var(--green-2); }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: .75rem;
+      text-align: center;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { position: static; }
+    }
+
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 20px, 1440px); padding-top: 16px; }
+      header { display: block; }
+      .reset { margin-top: 18px; }
+      h1 { margin-top: 24px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      .metric.primary { grid-column: 1 / -1; }
+      .fields { grid-template-columns: 1fr; }
+      .year-inputs { grid-template-columns: repeat(5, minmax(54px, 1fr)); overflow-x: auto; }
+      .chart-panel, .table-panel, .insight-panel, .controls { padding: 17px; }
+      .insight-panel { grid-template-columns: 1fr; }
+      .panel-head { display: block; }
+      .legend { margin-top: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="brand"><span class="mark">OL</span> OfferLab</div>
+        <h1>Know what the offer is really worth.</h1>
+        <p class="intro" id="intro">Adjust every compensation lever and see the effect across five years. Your current Coupang L6-I offer is loaded as the starting point.</p>
+      </div>
+      <button class="reset" id="resetButton" type="button">Reset current offer</button>
+    </header>
+
+    <div class="layout">
+      <aside class="panel controls">
+        <p class="eyebrow">Offer inputs</p>
+        <h2>Control the levers</h2>
+        <p class="helper" id="currencyHelper">Amounts are in USD. Changes update instantly.</p>
+
+        <section class="section">
+          <h3>Offer details</h3>
+          <div class="fields">
+            <label>Company
+              <div class="input-wrap"><input id="company" type="text" value="Coupang"></div>
+            </label>
+            <label>Role or level
+              <div class="input-wrap"><input id="role" type="text" value="L6-I"></div>
+            </label>
+            <label>Currency
+              <div class="input-wrap">
+                <select id="currency">
+                  <option value="USD">USD — US dollar</option>
+                  <option value="CAD">CAD — Canadian dollar</option>
+                  <option value="GBP">GBP — British pound</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="INR">INR — Indian rupee</option>
+                  <option value="AUD">AUD — Australian dollar</option>
+                  <option value="SGD">SGD — Singapore dollar</option>
+                  <option value="KRW">KRW — South Korean won</option>
+                </select>
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Recurring cash</h3>
+          <div class="fields">
+            <label>Year 1 base
+              <div class="input-wrap"><span class="currency-symbol">$</span><input id="base" type="number" min="0" step="1000" value="180000"></div>
+            </label>
+            <label>Annual base growth
+              <div class="input-wrap"><input class="percent" id="growth" type="number" min="0" step=".5" value="0"><span class="suffix">%</span></div>
+            </label>
+            <label>Target bonus
+              <div class="input-wrap"><input class="percent" id="bonusRate" type="number" min="0" step=".5" value="18"><span class="suffix">%</span></div>
+            </label>
+            <label>Annual TC target
+              <div class="input-wrap"><span class="currency-symbol">$</span><input id="target" type="number" min="0" step="10000" value="650000"></div>
+            </label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Initial stock grant</h3>
+          <p class="helper">Your $60K first-year vest implies a $600K grant at 10%.</p>
+          <div class="fields">
+            <label>Total grant value
+              <div class="input-wrap"><span class="currency-symbol">$</span><input id="stockGrant" type="number" min="0" step="10000" value="600000"></div>
+            </label>
+          </div>
+          <div class="year-inputs" id="vestingInputs">
+            <label>Y1 %<input class="percent vesting" type="number" min="0" step="1" value="10"></label>
+            <label>Y2 %<input class="percent vesting" type="number" min="0" step="1" value="10"></label>
+            <label>Y3 %<input class="percent vesting" type="number" min="0" step="1" value="40"></label>
+            <label>Y4 %<input class="percent vesting" type="number" min="0" step="1" value="40"></label>
+            <label>Y5 %<input class="percent vesting" type="number" min="0" step="1" value="0"></label>
+          </div>
+          <p class="helper" id="vestingTotal">Vesting schedule total: 100%</p>
+        </section>
+
+        <section class="section">
+          <h3>Sign-on cash by year</h3>
+          <div class="year-inputs" id="signonInputs">
+            <label class="money">Y1<input class="signon" type="number" min="0" step="1000" value="128000"></label>
+            <label class="money">Y2<input class="signon" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y3<input class="signon" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y4<input class="signon" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y5<input class="signon" type="number" min="0" step="1000" value="0"></label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Expected refresh equity vest</h3>
+          <p class="helper">Optional: enter only the amount expected to vest in each year.</p>
+          <div class="year-inputs" id="refreshInputs">
+            <label class="money">Y1<input class="refresh" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y2<input class="refresh" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y3<input class="refresh" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y4<input class="refresh" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y5<input class="refresh" type="number" min="0" step="1000" value="0"></label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Other cash by year</h3>
+          <p class="helper">Optional: relocation, retention, allowances, or guaranteed cash.</p>
+          <div class="year-inputs" id="otherCashInputs">
+            <label class="money">Y1<input class="other-cash" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y2<input class="other-cash" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y3<input class="other-cash" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y4<input class="other-cash" type="number" min="0" step="1000" value="0"></label>
+            <label class="money">Y5<input class="other-cash" type="number" min="0" step="1000" value="0"></label>
+          </div>
+        </section>
+      </aside>
+
+      <section class="results" aria-live="polite">
+        <div class="summary-grid">
+          <article class="panel metric primary">
+            <div class="label">Five-year total <span>Y1–Y5</span></div>
+            <div class="value" id="fiveYearTotal">$1.79M</div>
+            <div class="sub" id="fiveYearTargetGap">$1.46M below your five-year target</div>
+          </article>
+          <article class="panel metric">
+            <div class="label">Year 1 TC</div>
+            <div class="value" id="yearOneTotal">$400K</div>
+            <div class="sub">Matches the presented offer</div>
+          </article>
+          <article class="panel metric">
+            <div class="label">Average annual TC</div>
+            <div class="value" id="averageTotal">$358K</div>
+            <div class="sub" id="fourYearAverage">Four-year average: $395K</div>
+          </article>
+        </div>
+
+        <article class="panel chart-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Compensation timeline</p>
+              <h2>See the cliffs before you sign</h2>
+            </div>
+            <div class="legend">
+              <span class="base">Base</span>
+              <span class="bonus">Bonus</span>
+              <span class="stock">Initial stock</span>
+              <span class="signon">Sign-on</span>
+              <span class="other">Refresh</span>
+              <span class="other-cash">Other cash</span>
+            </div>
+          </div>
+          <div class="chart" id="chart"></div>
+          <div class="chart-years"><span>Year 1</span><span>Year 2</span><span>Year 3</span><span>Year 4</span><span>Year 5</span></div>
+        </article>
+
+        <article class="panel table-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Full breakdown</p>
+              <h2>Every dollar, every year</h2>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Component</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th><th>Year 5</th></tr>
+              </thead>
+              <tbody id="breakdown"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel insight-panel">
+          <div class="callout">
+            <h3>Target gap</h3>
+            <p id="targetInsight">You need additional compensation to reach your target.</p>
+          </div>
+          <div class="callout">
+            <h3>Negotiation lens</h3>
+            <p id="cliffInsight">Your largest compensation drop occurs after stock vesting ends.</p>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <footer>Grant values exclude future stock-price movement. Bonus assumes 100% target payout. Refresh grants are not guaranteed unless written into the offer.</footer>
+  </main>
+
+  <script>
+    const defaults = {
+      company: "Coupang",
+      role: "L6-I",
+      currency: "USD",
+      base: 180000,
+      growth: 0,
+      bonusRate: 18,
+      target: 650000,
+      stockGrant: 600000,
+      vesting: [10, 10, 40, 40, 0],
+      signon: [128000, 0, 0, 0, 0],
+      refresh: [0, 0, 0, 0, 0],
+      otherCash: [0, 0, 0, 0, 0]
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const number = (element) => Math.max(0, Number(element.value) || 0);
+    const currentCurrency = () => $("#currency").value || "USD";
+    const money = (value) => new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currentCurrency(),
+      maximumFractionDigits: 0
+    }).format(value);
+    const compactMoney = (value) => {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currentCurrency(),
+        notation: "compact",
+        maximumFractionDigits: 2
+      }).format(value);
+    };
+
+    function values() {
+      return {
+        company: $("#company").value.trim() || "Company",
+        role: $("#role").value.trim() || "Role",
+        currency: currentCurrency(),
+        base: number($("#base")),
+        growth: number($("#growth")) / 100,
+        bonusRate: number($("#bonusRate")) / 100,
+        target: number($("#target")),
+        stockGrant: number($("#stockGrant")),
+        vesting: $$(".vesting").map(number),
+        signon: $$(".signon").map(number),
+        refresh: $$(".refresh").map(number),
+        otherCash: $$(".other-cash").map(number)
+      };
+    }
+
+    function calculate() {
+      const input = values();
+      const years = Array.from({ length: 5 }, (_, index) => {
+        const base = input.base * Math.pow(1 + input.growth, index);
+        const bonus = base * input.bonusRate;
+        const stock = input.stockGrant * (input.vesting[index] / 100);
+        const signon = input.signon[index];
+        const refresh = input.refresh[index];
+        const otherCash = input.otherCash[index];
+        return { base, bonus, stock, signon, refresh, otherCash, total: base + bonus + stock + signon + refresh + otherCash };
+      });
+
+      render(input, years);
+    }
+
+    function render(input, years) {
+      const fiveYearTotal = years.reduce((sum, year) => sum + year.total, 0);
+      const fourYearTotal = years.slice(0, 4).reduce((sum, year) => sum + year.total, 0);
+      const average = fiveYearTotal / 5;
+      const targetTotal = input.target * 5;
+      const gap = targetTotal - fiveYearTotal;
+      const vestingTotal = input.vesting.reduce((sum, value) => sum + value, 0);
+      const currencySymbol = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: input.currency,
+        currencyDisplay: "narrowSymbol"
+      }).formatToParts(0).find((part) => part.type === "currency")?.value || input.currency;
+
+      $("#intro").textContent = `Adjust every compensation lever and see the effect across five years. Your ${input.company} ${input.role} offer is loaded as the starting point.`;
+      $("#currencyHelper").textContent = `Amounts are in ${input.currency}. Changes update instantly.`;
+      $$(".currency-symbol").forEach((element) => element.textContent = currencySymbol);
+      document.title = `${input.company} ${input.role} — OfferLab`;
+
+      $("#fiveYearTotal").textContent = compactMoney(fiveYearTotal);
+      $("#yearOneTotal").textContent = compactMoney(years[0].total);
+      $("#averageTotal").textContent = compactMoney(average);
+      $("#fourYearAverage").textContent = `Four-year average: ${compactMoney(fourYearTotal / 4)}`;
+      $("#vestingTotal").textContent = `Vesting schedule total: ${vestingTotal}%${vestingTotal !== 100 ? " — check this" : ""}`;
+      $("#vestingTotal").style.color = vestingTotal === 100 ? "var(--muted)" : "var(--coral)";
+
+      const gapElement = $("#fiveYearTargetGap");
+      if (gap > 0) {
+        gapElement.textContent = `${compactMoney(gap)} below your five-year target`;
+        gapElement.className = "sub";
+      } else {
+        gapElement.textContent = `${compactMoney(Math.abs(gap))} above your five-year target`;
+        gapElement.className = "sub positive";
+      }
+
+      renderChart(years);
+      renderTable(years);
+      renderInsights(input, years, gap);
+    }
+
+    function renderChart(years) {
+      const max = Math.max(...years.map((year) => year.total), 1);
+      $("#chart").innerHTML = years.map((year) => {
+        const height = Math.max(2, (year.total / max) * 230);
+        const segments = ["base", "bonus", "stock", "signon", "refresh", "otherCash"].map((key) => {
+          const segmentHeight = year.total ? (year[key] / year.total) * height : 0;
+          return `<div class="segment ${key}" style="height:${segmentHeight}px" title="${key}: ${money(year[key])}"></div>`;
+        }).join("");
+        return `<div class="bar-column"><div class="bar-total">${compactMoney(year.total)}</div><div class="bar" style="height:${height}px">${segments}</div></div>`;
+      }).join("");
+    }
+
+    function renderTable(years) {
+      const rows = [
+        ["Base salary", "base"],
+        ["Target bonus", "bonus"],
+        ["Initial stock vest", "stock"],
+        ["Sign-on cash", "signon"],
+        ["Refresh equity vest", "refresh"],
+        ["Other cash", "otherCash"],
+        ["Total compensation", "total"]
+      ];
+      $("#breakdown").innerHTML = rows.map(([label, key], index) => {
+        const className = index === rows.length - 1 ? "total-row" : "";
+        return `<tr class="${className}"><td>${label}</td>${years.map((year) => `<td>${compactMoney(year[key])}</td>`).join("")}</tr>`;
+      }).join("");
+    }
+
+    function renderInsights(input, years, gap) {
+      const gapInsight = $("#targetInsight");
+      if (gap > 0) {
+        const annualGap = gap / 5;
+        gapInsight.innerHTML = `The offer is <strong class="gap-value">${compactMoney(annualGap)} per year</strong> below your ${compactMoney(input.target)} target on a five-year average. That is ${compactMoney(gap)} in total.`;
+      } else {
+        gapInsight.innerHTML = `The offer is <strong class="positive">${compactMoney(Math.abs(gap) / 5)} per year above</strong> your target on a five-year average.`;
+      }
+
+      let largestDrop = { amount: 0, from: 1, to: 2 };
+      for (let index = 1; index < years.length; index++) {
+        const drop = years[index - 1].total - years[index].total;
+        if (drop > largestDrop.amount) largestDrop = { amount: drop, from: index, to: index + 1 };
+      }
+
+      const cliffInsight = $("#cliffInsight");
+      if (largestDrop.amount > 0) {
+        cliffInsight.innerHTML = `The largest cliff is <strong>${compactMoney(largestDrop.amount)}</strong> from Year ${largestDrop.from} to Year ${largestDrop.to}. Ask about refresh grants or additional cash before relying on the headline TC.`;
+      } else {
+        cliffInsight.textContent = "There is no year-over-year compensation drop in this scenario.";
+      }
+    }
+
+    function reset() {
+      $("#company").value = defaults.company;
+      $("#role").value = defaults.role;
+      $("#currency").value = defaults.currency;
+      $("#base").value = defaults.base;
+      $("#growth").value = defaults.growth;
+      $("#bonusRate").value = defaults.bonusRate;
+      $("#target").value = defaults.target;
+      $("#stockGrant").value = defaults.stockGrant;
+      $$(".vesting").forEach((element, index) => element.value = defaults.vesting[index]);
+      $$(".signon").forEach((element, index) => element.value = defaults.signon[index]);
+      $$(".refresh").forEach((element, index) => element.value = defaults.refresh[index]);
+      $$(".other-cash").forEach((element, index) => element.value = defaults.otherCash[index]);
+      calculate();
+    }
+
+    $$("input, select").forEach((input) => input.addEventListener("input", calculate));
+    $("#resetButton").addEventListener("click", reset);
+    calculate();
+  </script>
+</body>
+</html>
