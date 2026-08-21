@@ -102,6 +102,7 @@
 
     .layout {
       display: grid;
+      min-width: 0;
       grid-template-columns: minmax(310px, 0.72fr) minmax(560px, 1.55fr);
       gap: 22px;
       align-items: start;
@@ -252,6 +253,7 @@
 
     .results {
       display: grid;
+      min-width: 0;
       gap: 18px;
     }
 
@@ -409,7 +411,7 @@
       font-weight: 750;
     }
 
-    .table-scroll { overflow-x: auto; }
+    .table-scroll { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; }
 
     table {
       width: 100%;
@@ -458,8 +460,11 @@
     .positive { color: var(--green-2); }
 
     .scenario-explorer {
+      width: 100%;
+      min-width: 0;
       margin-top: 22px;
       padding: 26px;
+      overflow: hidden;
     }
 
     .scenario-header {
@@ -520,6 +525,8 @@
 
     .scenario-results {
       display: none;
+      width: 100%;
+      min-width: 0;
       margin-top: 22px;
       padding-top: 22px;
       border-top: 1px solid var(--line);
@@ -560,12 +567,14 @@
 
     .scenario-charts {
       display: grid;
+      min-width: 0;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
       margin-bottom: 20px;
     }
 
     .scenario-chart {
+      min-width: 0;
       padding: 16px;
       border: 1px solid var(--line);
       border-radius: 14px;
@@ -574,9 +583,12 @@
     .scenario-chart canvas {
       display: block;
       width: 100%;
+      max-width: 100%;
       height: 280px;
       margin-top: 12px;
     }
+
+    #scenarioHistogram { cursor: pointer; touch-action: manipulation; }
 
     .scenario-legend {
       display: flex;
@@ -597,6 +609,57 @@
     .scenario-legend .below { background: var(--coral); }
     .scenario-legend .within { background: var(--green-2); }
     .scenario-legend .above { background: var(--blue); }
+
+    .sort-button {
+      padding: 2px 0;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      font: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      white-space: nowrap;
+    }
+
+    .sort-button::after {
+      margin-left: 4px;
+      color: #a5ada7;
+      content: "↕";
+    }
+
+    .sort-button.active.asc::after { color: var(--green-2); content: "↑"; }
+    .sort-button.active.desc::after { color: var(--green-2); content: "↓"; }
+
+    .table-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 40px;
+      margin-top: 10px;
+    }
+
+    .table-actions p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .table-action-buttons { display: flex; gap: 8px; }
+
+    .small-button {
+      display: none;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--ink);
+      background: white;
+      font-size: .76rem;
+      font-weight: 800;
+    }
+
+    .small-button.visible { display: inline-block; }
 
     footer {
       margin-top: 18px;
@@ -629,6 +692,8 @@
       .scenario-options { grid-template-columns: 1fr; }
       .scenario-summary { grid-template-columns: 1fr 1fr; }
       .start-button { width: 100%; }
+      .scenario-results, .scenario-config, .scenario-charts, .scenario-chart, .table-scroll { width: 100%; min-width: 0; max-width: 100%; }
+      .table-actions { align-items: flex-start; flex-direction: column; }
     }
   </style>
 </head>
@@ -879,7 +944,7 @@
           </div>
           <div class="scenario-chart">
             <h3>Compensation distribution</h3>
-            <p class="helper">See where all generated package values are concentrated.</p>
+            <p class="helper">Tap a bar to inspect every package in that compensation range.</p>
             <canvas id="scenarioHistogram"></canvas>
           </div>
         </div>
@@ -887,16 +952,30 @@
         <div class="panel-head">
           <div>
             <p class="eyebrow">Closest matches</p>
-            <h2>Packages nearest your target</h2>
+            <h2 id="scenarioTableTitle">Packages nearest your target</h2>
           </div>
         </div>
         <div class="table-scroll">
           <table>
             <thead>
-              <tr><th>Status</th><th>Base</th><th>Equity grant</th><th>Year 1 sign-on</th><th id="scenarioMetricHeading">Year 1 TC</th><th>Difference</th></tr>
+              <tr>
+                <th><button class="sort-button" data-sort="status" type="button">Status</button></th>
+                <th><button class="sort-button" data-sort="base" type="button">Base</button></th>
+                <th><button class="sort-button" data-sort="equity" type="button">Equity grant</button></th>
+                <th><button class="sort-button" data-sort="signon" type="button">Year 1 sign-on</button></th>
+                <th><button class="sort-button" data-sort="total" id="scenarioMetricHeading" type="button">Year 1 TC</button></th>
+                <th><button class="sort-button" data-sort="difference" type="button">Difference</button></th>
+              </tr>
             </thead>
             <tbody id="scenarioMatches"></tbody>
           </table>
+        </div>
+        <div class="table-actions">
+          <p id="scenarioTableNote">Showing the 20 closest packages.</p>
+          <div class="table-action-buttons">
+            <button class="small-button" id="scenarioClearFilter" type="button">Clear chart filter</button>
+            <button class="small-button" id="scenarioShowMore" type="button">Show more</button>
+          </div>
         </div>
       </div>
     </section>
@@ -922,6 +1001,13 @@
     const $$ = (selector) => [...document.querySelectorAll(selector)];
     const number = (element) => Math.max(0, Number(element.value) || 0);
     let lastScenarioState = null;
+    let histogramGeometry = null;
+    const scenarioView = {
+      sortKey: "closeness",
+      sortDirection: "asc",
+      selectedBin: null,
+      limit: 20
+    };
     const currentCurrency = () => $("#currency").value || "USD";
     const money = (value) => new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -1140,6 +1226,10 @@
         }
       }
 
+      scenarioView.sortKey = "closeness";
+      scenarioView.sortDirection = "asc";
+      scenarioView.selectedBin = null;
+      scenarioView.limit = 20;
       lastScenarioState = { scenarios, target: input.target, lower, upper, metric: config.metric };
       renderScenarioResults(lastScenarioState);
     }
@@ -1161,18 +1251,51 @@
       $("#scenarioAbove").textContent = counts.above.toLocaleString();
       $("#scenarioMetricHeading").textContent = metricLabels[state.metric];
 
-      const closest = [...state.scenarios]
-        .sort((a, b) => Math.abs(a.difference) - Math.abs(b.difference))
-        .slice(0, 20);
-      $("#scenarioMatches").innerHTML = closest.map((scenario) => {
+      renderScenarioTable(state);
+      $("#scenarioResults").classList.add("visible");
+      drawScenarioScatter(state);
+      drawScenarioHistogram(state);
+    }
+
+    function renderScenarioTable(state) {
+      let candidates = state.scenarios;
+      if (scenarioView.selectedBin) {
+        const { min, max, isLast } = scenarioView.selectedBin;
+        candidates = candidates.filter((scenario) => scenario.total >= min && (isLast ? scenario.total <= max : scenario.total < max));
+      }
+
+      const statusOrder = { below: 0, within: 1, above: 2 };
+      const sorted = [...candidates].sort((a, b) => {
+        let result;
+        if (scenarioView.sortKey === "closeness") result = Math.abs(a.difference) - Math.abs(b.difference);
+        else if (scenarioView.sortKey === "status") result = statusOrder[a.status] - statusOrder[b.status];
+        else result = a[scenarioView.sortKey] - b[scenarioView.sortKey];
+        return scenarioView.sortDirection === "desc" ? -result : result;
+      });
+      const visible = sorted.slice(0, scenarioView.limit);
+      $("#scenarioMatches").innerHTML = visible.map((scenario) => {
         const label = scenario.status === "within" ? "Within target" : scenario.status[0].toUpperCase() + scenario.status.slice(1);
         const difference = `${scenario.difference >= 0 ? "+" : ""}${compactMoney(scenario.difference)}`;
         return `<tr><td><span class="${scenario.status === "within" ? "positive" : scenario.status === "below" ? "gap-value" : ""}">${label}</span></td><td>${compactMoney(scenario.base)}</td><td>${compactMoney(scenario.equity)}</td><td>${compactMoney(scenario.signon)}</td><td>${compactMoney(scenario.total)}</td><td>${difference}</td></tr>`;
       }).join("");
 
-      $("#scenarioResults").classList.add("visible");
-      drawScenarioScatter(state);
-      drawScenarioHistogram(state);
+      if (scenarioView.selectedBin) {
+        $("#scenarioTableTitle").textContent = `${compactMoney(scenarioView.selectedBin.min)}–${compactMoney(scenarioView.selectedBin.max)} packages`;
+        $("#scenarioTableNote").textContent = `Showing ${Math.min(visible.length, candidates.length).toLocaleString()} of ${candidates.length.toLocaleString()} packages from the selected bar.`;
+      } else {
+        $("#scenarioTableTitle").textContent = "Packages nearest your target";
+        $("#scenarioTableNote").textContent = `Showing ${Math.min(visible.length, candidates.length).toLocaleString()} of ${candidates.length.toLocaleString()} packages, ordered nearest to target.`;
+      }
+
+      $("#scenarioClearFilter").classList.toggle("visible", Boolean(scenarioView.selectedBin));
+      $("#scenarioShowMore").classList.toggle("visible", visible.length < candidates.length);
+      $$(".sort-button").forEach((button) => {
+        const active = button.dataset.sort === scenarioView.sortKey;
+        button.classList.toggle("active", active);
+        button.classList.toggle("asc", active && scenarioView.sortDirection === "asc");
+        button.classList.toggle("desc", active && scenarioView.sortDirection === "desc");
+        button.closest("th")?.setAttribute("aria-sort", active ? (scenarioView.sortDirection === "asc" ? "ascending" : "descending") : "none");
+      });
     }
 
     function canvasContext(canvas) {
@@ -1255,6 +1378,7 @@
       });
       const largest = Math.max(...bins, 1);
       const barWidth = plotWidth / binCount;
+      histogramGeometry = { min, max, binWidth, binCount, padding, barWidth, plotWidth };
 
       bins.forEach((count, index) => {
         const midpoint = min + (index + .5) * binWidth;
@@ -1263,6 +1387,11 @@
         context.globalAlpha = .82;
         const barHeight = (count / largest) * plotHeight;
         context.fillRect(padding.left + index * barWidth + 1, padding.top + plotHeight - barHeight, Math.max(1, barWidth - 2), barHeight);
+        if (scenarioView.selectedBin?.index === index) {
+          context.strokeStyle = "#17211b";
+          context.lineWidth = 2;
+          context.strokeRect(padding.left + index * barWidth + 1, padding.top + plotHeight - barHeight, Math.max(1, barWidth - 2), barHeight);
+        }
       });
       context.globalAlpha = 1;
       context.strokeStyle = "#d9d8cf";
@@ -1297,6 +1426,49 @@
     $$("input, select").forEach((input) => input.addEventListener("input", calculate));
     $("#resetButton").addEventListener("click", reset);
     $("#scenarioStart").addEventListener("click", runScenarioExplorer);
+    $$(".sort-button").forEach((button) => button.addEventListener("click", () => {
+      const nextKey = button.dataset.sort;
+      if (scenarioView.sortKey === nextKey) {
+        scenarioView.sortDirection = scenarioView.sortDirection === "asc" ? "desc" : "asc";
+      } else {
+        scenarioView.sortKey = nextKey;
+        scenarioView.sortDirection = "asc";
+      }
+      if (lastScenarioState) renderScenarioTable(lastScenarioState);
+    }));
+    $("#scenarioHistogram").addEventListener("click", (event) => {
+      if (!lastScenarioState || !histogramGeometry) return;
+      const rectangle = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rectangle.left;
+      const { min, max, binWidth, binCount, padding, barWidth, plotWidth } = histogramGeometry;
+      if (clickX < padding.left || clickX > padding.left + plotWidth) return;
+      const index = Math.min(binCount - 1, Math.floor((clickX - padding.left) / barWidth));
+      scenarioView.selectedBin = {
+        index,
+        min: min + index * binWidth,
+        max: index === binCount - 1 ? max : min + (index + 1) * binWidth,
+        isLast: index === binCount - 1
+      };
+      scenarioView.sortKey = "total";
+      scenarioView.sortDirection = "asc";
+      scenarioView.limit = 50;
+      renderScenarioTable(lastScenarioState);
+      drawScenarioHistogram(lastScenarioState);
+    });
+    $("#scenarioClearFilter").addEventListener("click", () => {
+      scenarioView.selectedBin = null;
+      scenarioView.sortKey = "closeness";
+      scenarioView.sortDirection = "asc";
+      scenarioView.limit = 20;
+      if (lastScenarioState) {
+        renderScenarioTable(lastScenarioState);
+        drawScenarioHistogram(lastScenarioState);
+      }
+    });
+    $("#scenarioShowMore").addEventListener("click", () => {
+      scenarioView.limit += 50;
+      if (lastScenarioState) renderScenarioTable(lastScenarioState);
+    });
     window.addEventListener("resize", () => {
       if (lastScenarioState) {
         drawScenarioScatter(lastScenarioState);
