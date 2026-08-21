@@ -457,6 +457,147 @@
     .gap-value { color: var(--coral); }
     .positive { color: var(--green-2); }
 
+    .scenario-explorer {
+      margin-top: 22px;
+      padding: 26px;
+    }
+
+    .scenario-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .scenario-header .intro { font-size: .92rem; }
+
+    .scenario-config {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .range-card {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #faf9f3;
+    }
+
+    .range-card h3 { margin-bottom: 14px; }
+    .range-card label { margin-top: 13px; }
+    .range-card label:first-of-type { margin-top: 0; }
+
+    .scenario-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 14px;
+      align-items: end;
+      margin-top: 16px;
+    }
+
+    .start-button {
+      height: 44px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 11px;
+      color: white;
+      background: var(--green);
+      font-weight: 850;
+      box-shadow: 0 6px 18px rgba(23, 79, 61, .2);
+    }
+
+    .start-button:hover { background: var(--green-2); }
+
+    .scenario-error {
+      min-height: 20px;
+      margin: 10px 0 0;
+      color: var(--coral);
+      font-size: .82rem;
+      font-weight: 750;
+    }
+
+    .scenario-results {
+      display: none;
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .scenario-results.visible { display: block; }
+
+    .scenario-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .scenario-stat {
+      padding: 15px;
+      border-radius: 12px;
+      background: #eef0e7;
+    }
+
+    .scenario-stat .label {
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+
+    .scenario-stat strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 1.45rem;
+      letter-spacing: -.04em;
+    }
+
+    .scenario-stat.below { border-top: 3px solid var(--coral); }
+    .scenario-stat.within { border-top: 3px solid var(--green-2); }
+    .scenario-stat.above { border-top: 3px solid var(--blue); }
+
+    .scenario-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .scenario-chart {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .scenario-chart canvas {
+      display: block;
+      width: 100%;
+      height: 280px;
+      margin-top: 12px;
+    }
+
+    .scenario-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    .scenario-legend i {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 4px;
+      border-radius: 50%;
+    }
+
+    .scenario-legend .below { background: var(--coral); }
+    .scenario-legend .within { background: var(--green-2); }
+    .scenario-legend .above { background: var(--blue); }
+
     footer {
       margin-top: 18px;
       color: var(--muted);
@@ -482,6 +623,12 @@
       .insight-panel { grid-template-columns: 1fr; }
       .panel-head { display: block; }
       .legend { margin-top: 10px; }
+      .scenario-explorer { padding: 17px; }
+      .scenario-header { display: block; }
+      .scenario-config, .scenario-charts { grid-template-columns: 1fr; }
+      .scenario-options { grid-template-columns: 1fr; }
+      .scenario-summary { grid-template-columns: 1fr 1fr; }
+      .start-button { width: 100%; }
     }
   </style>
 </head>
@@ -662,6 +809,98 @@
       </section>
     </div>
 
+    <section class="panel scenario-explorer">
+      <div class="scenario-header">
+        <div>
+          <p class="eyebrow">Scenario explorer</p>
+          <h2>Search thousands of package combinations</h2>
+          <p class="intro">Choose a minimum, maximum, and increment for each lever. The explorer finds combinations below, within, and above your target band.</p>
+        </div>
+      </div>
+
+      <div class="scenario-config">
+        <div class="range-card">
+          <h3>Base salary range</h3>
+          <label>Minimum<input id="scenarioBaseMin" type="range" min="0" max="500000" step="5000" value="180000"></label>
+          <label>Maximum<input id="scenarioBaseMax" type="range" min="0" max="500000" step="5000" value="250000"></label>
+          <label>Increment<input id="scenarioBaseStep" type="range" min="5000" max="100000" step="5000" value="10000"></label>
+        </div>
+
+        <div class="range-card">
+          <h3>Initial equity grant range</h3>
+          <label>Minimum<input id="scenarioEquityMin" type="range" min="0" max="5000000" step="10000" value="600000"></label>
+          <label>Maximum<input id="scenarioEquityMax" type="range" min="0" max="5000000" step="10000" value="1000000"></label>
+          <label>Increment<input id="scenarioEquityStep" type="range" min="10000" max="500000" step="10000" value="50000"></label>
+        </div>
+
+        <div class="range-card">
+          <h3>Year 1 sign-on range</h3>
+          <label>Minimum<input id="scenarioSignonMin" type="range" min="0" max="1000000" step="5000" value="125000"></label>
+          <label>Maximum<input id="scenarioSignonMax" type="range" min="0" max="1000000" step="5000" value="350000"></label>
+          <label>Increment<input id="scenarioSignonStep" type="range" min="5000" max="250000" step="5000" value="25000"></label>
+        </div>
+      </div>
+
+      <div class="scenario-options">
+        <label>Compare against target using
+          <div class="input-wrap">
+            <select id="scenarioMetric">
+              <option value="year1">Year 1 total compensation</option>
+              <option value="fourYear">Four-year annual average</option>
+              <option value="fiveYear">Five-year annual average</option>
+            </select>
+          </div>
+        </label>
+        <label>Target tolerance
+          <input class="percent" id="scenarioTolerance" type="range" min="0" max="25" step="1" value="5">
+        </label>
+        <button class="start-button" id="scenarioStart" type="button">Start analysis</button>
+      </div>
+      <p class="scenario-error" id="scenarioError"></p>
+
+      <div class="scenario-results" id="scenarioResults">
+        <div class="scenario-summary">
+          <div class="scenario-stat"><span class="label">Tested</span><strong id="scenarioTested">0</strong></div>
+          <div class="scenario-stat below"><span class="label">Below band</span><strong id="scenarioBelow">0</strong></div>
+          <div class="scenario-stat within"><span class="label">Within band</span><strong id="scenarioWithin">0</strong></div>
+          <div class="scenario-stat above"><span class="label">Above band</span><strong id="scenarioAbove">0</strong></div>
+        </div>
+
+        <div class="scenario-charts">
+          <div class="scenario-chart">
+            <h3>Base pay vs. total compensation</h3>
+            <p class="helper">Each point is one package. Color shows its position relative to your target band.</p>
+            <canvas id="scenarioScatter"></canvas>
+            <div class="scenario-legend">
+              <span><i class="below"></i>Below</span>
+              <span><i class="within"></i>Within target</span>
+              <span><i class="above"></i>Above</span>
+            </div>
+          </div>
+          <div class="scenario-chart">
+            <h3>Compensation distribution</h3>
+            <p class="helper">See where all generated package values are concentrated.</p>
+            <canvas id="scenarioHistogram"></canvas>
+          </div>
+        </div>
+
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Closest matches</p>
+            <h2>Packages nearest your target</h2>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Status</th><th>Base</th><th>Equity grant</th><th>Year 1 sign-on</th><th id="scenarioMetricHeading">Year 1 TC</th><th>Difference</th></tr>
+            </thead>
+            <tbody id="scenarioMatches"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <footer>Grant values exclude future stock-price movement. Bonus assumes 100% target payout. Refresh grants are not guaranteed unless written into the offer.</footer>
   </main>
 
@@ -682,6 +921,7 @@
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => [...document.querySelectorAll(selector)];
     const number = (element) => Math.max(0, Number(element.value) || 0);
+    let lastScenarioState = null;
     const currentCurrency = () => $("#currency").value || "USD";
     const money = (value) => new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -830,6 +1070,216 @@
       });
     }
 
+    function steppedValues(min, max, step) {
+      const count = Math.floor((max - min) / step) + 1;
+      return Array.from({ length: count }, (_, index) => Math.round(min + index * step));
+    }
+
+    function scenarioMetricValue(input, base, equity, signon, metric) {
+      const totals = Array.from({ length: 5 }, (_, index) => {
+        const yearlyBase = base * Math.pow(1 + input.growth, index);
+        const bonus = yearlyBase * input.bonusRate;
+        const stock = equity * (input.vesting[index] / 100);
+        const yearlySignon = index === 0 ? signon : input.signon[index];
+        return yearlyBase + bonus + stock + yearlySignon + input.refresh[index] + input.otherCash[index];
+      });
+      if (metric === "fourYear") return totals.slice(0, 4).reduce((sum, value) => sum + value, 0) / 4;
+      if (metric === "fiveYear") return totals.reduce((sum, value) => sum + value, 0) / 5;
+      return totals[0];
+    }
+
+    function runScenarioExplorer() {
+      const input = values();
+      const config = {
+        baseMin: number($("#scenarioBaseMin")),
+        baseMax: number($("#scenarioBaseMax")),
+        baseStep: number($("#scenarioBaseStep")),
+        equityMin: number($("#scenarioEquityMin")),
+        equityMax: number($("#scenarioEquityMax")),
+        equityStep: number($("#scenarioEquityStep")),
+        signonMin: number($("#scenarioSignonMin")),
+        signonMax: number($("#scenarioSignonMax")),
+        signonStep: number($("#scenarioSignonStep")),
+        tolerance: number($("#scenarioTolerance")) / 100,
+        metric: $("#scenarioMetric").value
+      };
+      const error = $("#scenarioError");
+      error.textContent = "";
+
+      if (config.baseMax < config.baseMin || config.equityMax < config.equityMin || config.signonMax < config.signonMin) {
+        error.textContent = "Each maximum must be greater than or equal to its minimum.";
+        $("#scenarioResults").classList.remove("visible");
+        return;
+      }
+      if (!config.baseStep || !config.equityStep || !config.signonStep) {
+        error.textContent = "Every increment must be greater than zero.";
+        $("#scenarioResults").classList.remove("visible");
+        return;
+      }
+
+      const bases = steppedValues(config.baseMin, config.baseMax, config.baseStep);
+      const equities = steppedValues(config.equityMin, config.equityMax, config.equityStep);
+      const signons = steppedValues(config.signonMin, config.signonMax, config.signonStep);
+      const combinationCount = bases.length * equities.length * signons.length;
+      if (combinationCount > 100000) {
+        error.textContent = `${combinationCount.toLocaleString()} combinations is too many. Increase one or more increments to stay under 100,000.`;
+        $("#scenarioResults").classList.remove("visible");
+        return;
+      }
+
+      const lower = input.target * (1 - config.tolerance);
+      const upper = input.target * (1 + config.tolerance);
+      const scenarios = [];
+      for (const base of bases) {
+        for (const equity of equities) {
+          for (const signon of signons) {
+            const total = scenarioMetricValue(input, base, equity, signon, config.metric);
+            const status = total < lower ? "below" : total > upper ? "above" : "within";
+            scenarios.push({ base, equity, signon, total, status, difference: total - input.target });
+          }
+        }
+      }
+
+      lastScenarioState = { scenarios, target: input.target, lower, upper, metric: config.metric };
+      renderScenarioResults(lastScenarioState);
+    }
+
+    function renderScenarioResults(state) {
+      const counts = state.scenarios.reduce((result, scenario) => {
+        result[scenario.status]++;
+        return result;
+      }, { below: 0, within: 0, above: 0 });
+      const metricLabels = {
+        year1: "Year 1 TC",
+        fourYear: "4-year average",
+        fiveYear: "5-year average"
+      };
+
+      $("#scenarioTested").textContent = state.scenarios.length.toLocaleString();
+      $("#scenarioBelow").textContent = counts.below.toLocaleString();
+      $("#scenarioWithin").textContent = counts.within.toLocaleString();
+      $("#scenarioAbove").textContent = counts.above.toLocaleString();
+      $("#scenarioMetricHeading").textContent = metricLabels[state.metric];
+
+      const closest = [...state.scenarios]
+        .sort((a, b) => Math.abs(a.difference) - Math.abs(b.difference))
+        .slice(0, 20);
+      $("#scenarioMatches").innerHTML = closest.map((scenario) => {
+        const label = scenario.status === "within" ? "Within target" : scenario.status[0].toUpperCase() + scenario.status.slice(1);
+        const difference = `${scenario.difference >= 0 ? "+" : ""}${compactMoney(scenario.difference)}`;
+        return `<tr><td><span class="${scenario.status === "within" ? "positive" : scenario.status === "below" ? "gap-value" : ""}">${label}</span></td><td>${compactMoney(scenario.base)}</td><td>${compactMoney(scenario.equity)}</td><td>${compactMoney(scenario.signon)}</td><td>${compactMoney(scenario.total)}</td><td>${difference}</td></tr>`;
+      }).join("");
+
+      $("#scenarioResults").classList.add("visible");
+      drawScenarioScatter(state);
+      drawScenarioHistogram(state);
+    }
+
+    function canvasContext(canvas) {
+      const width = Math.max(300, canvas.clientWidth);
+      const height = 280;
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      const context = canvas.getContext("2d");
+      context.scale(ratio, ratio);
+      return { context, width, height };
+    }
+
+    function drawScenarioScatter(state) {
+      const canvas = $("#scenarioScatter");
+      const { context, width, height } = canvasContext(canvas);
+      const padding = { top: 12, right: 12, bottom: 34, left: 58 };
+      const plotWidth = width - padding.left - padding.right;
+      const plotHeight = height - padding.top - padding.bottom;
+      const bases = state.scenarios.map((scenario) => scenario.base);
+      const totals = state.scenarios.map((scenario) => scenario.total);
+      const minX = Math.min(...bases);
+      const maxX = Math.max(...bases);
+      const rawMinY = Math.min(...totals, state.lower);
+      const rawMaxY = Math.max(...totals, state.upper);
+      const yPadding = Math.max((rawMaxY - rawMinY) * .08, 1);
+      const minY = Math.max(0, rawMinY - yPadding);
+      const maxY = rawMaxY + yPadding;
+      const x = (value) => padding.left + ((value - minX) / Math.max(maxX - minX, 1)) * plotWidth;
+      const y = (value) => padding.top + (1 - (value - minY) / Math.max(maxY - minY, 1)) * plotHeight;
+
+      context.fillStyle = "rgba(38, 118, 91, .1)";
+      context.fillRect(padding.left, y(state.upper), plotWidth, y(state.lower) - y(state.upper));
+      context.strokeStyle = "#d9d8cf";
+      context.fillStyle = "#66736b";
+      context.font = "11px system-ui";
+      context.textAlign = "right";
+      for (let index = 0; index <= 4; index++) {
+        const value = minY + ((maxY - minY) * index / 4);
+        const lineY = y(value);
+        context.beginPath();
+        context.moveTo(padding.left, lineY);
+        context.lineTo(width - padding.right, lineY);
+        context.stroke();
+        context.fillText(compactMoney(value), padding.left - 7, lineY + 4);
+      }
+
+      const colors = { below: "#ed765e", within: "#26765b", above: "#4f76a8" };
+      const sampleStep = Math.max(1, Math.ceil(state.scenarios.length / 16000));
+      for (let index = 0; index < state.scenarios.length; index += sampleStep) {
+        const scenario = state.scenarios[index];
+        context.fillStyle = colors[scenario.status];
+        context.globalAlpha = scenario.status === "within" ? .75 : .35;
+        context.beginPath();
+        context.arc(x(scenario.base), y(scenario.total), scenario.status === "within" ? 2.5 : 1.8, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.globalAlpha = 1;
+      context.textAlign = "center";
+      context.fillStyle = "#66736b";
+      context.fillText(compactMoney(minX), padding.left, height - 10);
+      context.fillText(compactMoney(maxX), width - padding.right, height - 10);
+    }
+
+    function drawScenarioHistogram(state) {
+      const canvas = $("#scenarioHistogram");
+      const { context, width, height } = canvasContext(canvas);
+      const padding = { top: 12, right: 12, bottom: 34, left: 42 };
+      const plotWidth = width - padding.left - padding.right;
+      const plotHeight = height - padding.top - padding.bottom;
+      const totals = state.scenarios.map((scenario) => scenario.total);
+      const min = Math.min(...totals);
+      const max = Math.max(...totals);
+      const binCount = 24;
+      const binWidth = Math.max((max - min) / binCount, 1);
+      const bins = Array(binCount).fill(0);
+      totals.forEach((total) => {
+        const index = Math.min(binCount - 1, Math.floor((total - min) / binWidth));
+        bins[index]++;
+      });
+      const largest = Math.max(...bins, 1);
+      const barWidth = plotWidth / binCount;
+
+      bins.forEach((count, index) => {
+        const midpoint = min + (index + .5) * binWidth;
+        const status = midpoint < state.lower ? "below" : midpoint > state.upper ? "above" : "within";
+        context.fillStyle = status === "below" ? "#ed765e" : status === "above" ? "#4f76a8" : "#26765b";
+        context.globalAlpha = .82;
+        const barHeight = (count / largest) * plotHeight;
+        context.fillRect(padding.left + index * barWidth + 1, padding.top + plotHeight - barHeight, Math.max(1, barWidth - 2), barHeight);
+      });
+      context.globalAlpha = 1;
+      context.strokeStyle = "#d9d8cf";
+      context.beginPath();
+      context.moveTo(padding.left, padding.top + plotHeight);
+      context.lineTo(width - padding.right, padding.top + plotHeight);
+      context.stroke();
+      context.fillStyle = "#66736b";
+      context.font = "11px system-ui";
+      context.textAlign = "center";
+      context.fillText(compactMoney(min), padding.left, height - 10);
+      context.fillText(compactMoney(max), width - padding.right, height - 10);
+      context.textAlign = "right";
+      context.fillText(largest.toLocaleString(), padding.left - 6, padding.top + 5);
+      context.fillText("0", padding.left - 6, padding.top + plotHeight + 4);
+    }
+
     function reset() {
       $("#currency").value = defaults.currency;
       $("#base").value = defaults.base;
@@ -846,6 +1296,13 @@
 
     $$("input, select").forEach((input) => input.addEventListener("input", calculate));
     $("#resetButton").addEventListener("click", reset);
+    $("#scenarioStart").addEventListener("click", runScenarioExplorer);
+    window.addEventListener("resize", () => {
+      if (lastScenarioState) {
+        drawScenarioScatter(lastScenarioState);
+        drawScenarioHistogram(lastScenarioState);
+      }
+    });
     calculate();
   </script>
 </body>
