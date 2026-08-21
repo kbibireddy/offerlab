@@ -1401,9 +1401,18 @@
       context.stroke();
       context.fillStyle = "#66736b";
       context.font = "11px system-ui";
-      context.textAlign = "center";
-      context.fillText(compactMoney(min), padding.left, height - 10);
-      context.fillText(compactMoney(max), width - padding.right, height - 10);
+      const tickCount = width < 420 ? 3 : 5;
+      for (let index = 0; index < tickCount; index++) {
+        const ratio = index / (tickCount - 1);
+        const tickX = padding.left + ratio * plotWidth;
+        const tickValue = min + ratio * (max - min);
+        context.beginPath();
+        context.moveTo(tickX, padding.top + plotHeight);
+        context.lineTo(tickX, padding.top + plotHeight + 5);
+        context.stroke();
+        context.textAlign = index === 0 ? "left" : index === tickCount - 1 ? "right" : "center";
+        context.fillText(compactMoney(tickValue), tickX, height - 10);
+      }
       context.textAlign = "right";
       context.fillText(largest.toLocaleString(), padding.left - 6, padding.top + 5);
       context.fillText("0", padding.left - 6, padding.top + plotHeight + 4);
