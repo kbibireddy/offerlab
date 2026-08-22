@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Interactive five-year compensation and offer negotiation calculator">
-  <title>OfferLab — Compensation Calculator</title>
+  <meta name="description" content="Interactive multi-year compensation calculator">
+  <title>Compensation Planner</title>
   <style>
     :root {
       --ink: #17211b;
@@ -16,6 +16,7 @@
       --green-2: #26765b;
       --lime: #d8f36b;
       --coral: #ed765e;
+      --danger: #a43f2f;
       --blue: #4f76a8;
       --gold: #d7a53d;
       --shadow: 0 12px 36px rgba(31, 45, 37, 0.08);
@@ -23,6 +24,18 @@
     }
 
     * { box-sizing: border-box; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     body {
       margin: 0;
@@ -456,7 +469,7 @@
       font-size: .85rem;
     }
 
-    .gap-value { color: var(--coral); }
+    .gap-value { color: var(--danger); }
     .positive { color: var(--green-2); }
 
     .scenario-explorer {
@@ -518,7 +531,7 @@
     .scenario-error {
       min-height: 20px;
       margin: 10px 0 0;
-      color: var(--coral);
+      color: var(--danger);
       font-size: .82rem;
       font-weight: 750;
     }
@@ -701,21 +714,21 @@
   <main class="shell">
     <header>
       <div>
-        <div class="brand"><span class="mark">OL</span> OfferLab</div>
-        <h1>Know what the offer is really worth.</h1>
-        <p class="intro" id="intro">Adjust every compensation lever and see the effect across five years. Your current offer is loaded as the starting point.</p>
+        <div class="brand"><span class="mark">CP</span> Compensation Planner</div>
+        <h1>Model compensation across multiple years.</h1>
+        <p class="intro" id="intro">Adjust compensation components and assumptions to understand how total compensation changes over five years.</p>
       </div>
-      <button class="reset" id="resetButton" type="button">Reset current offer</button>
+      <button class="reset" id="resetButton" type="button">Reset inputs</button>
     </header>
 
     <div class="layout">
       <aside class="panel controls">
-        <p class="eyebrow">Offer inputs</p>
-        <h2>Control the levers</h2>
-        <p class="helper" id="currencyHelper">Amounts are in USD. Changes update instantly.</p>
+        <p class="eyebrow">Compensation inputs</p>
+        <h2>Set your assumptions</h2>
+        <p class="helper" id="currencyHelper">Amounts are displayed in USD. No currency conversion is performed.</p>
 
         <section class="section">
-          <h3>Offer details</h3>
+          <h3>Calculator settings</h3>
           <div class="fields">
             <label>Currency
               <div class="input-wrap">
@@ -737,43 +750,43 @@
         <section class="section">
           <h3>Recurring cash</h3>
           <div class="fields">
-            <label>Year 1 base
-              <div class="input-wrap"><input id="base" type="range" min="0" max="500000" step="1000" value="180000"></div>
+            <label>Base salary — Year 1
+              <div class="input-wrap"><input id="base" type="range" min="0" max="500000" step="1000" value="200000"></div>
             </label>
-            <label>Annual base growth
-              <div class="input-wrap"><input class="percent" id="growth" type="range" min="0" max="20" step=".5" value="0"></div>
+            <label>Annual salary growth
+              <div class="input-wrap"><input class="percent" id="growth" type="range" min="0" max="20" step=".5" value="3"></div>
             </label>
-            <label>Target bonus
-              <div class="input-wrap"><input class="percent" id="bonusRate" type="range" min="0" max="100" step=".5" value="18"></div>
+            <label>Target bonus (% of base)
+              <div class="input-wrap"><input class="percent" id="bonusRate" type="range" min="0" max="100" step=".5" value="15"></div>
             </label>
-            <label>Annual TC target
-              <div class="input-wrap"><input id="target" type="range" min="0" max="2000000" step="10000" value="650000"></div>
+            <label>Target annual compensation
+              <div class="input-wrap"><input id="target" type="range" min="0" max="2000000" step="10000" value="500000"></div>
             </label>
           </div>
         </section>
 
         <section class="section">
-          <h3>Initial stock grant</h3>
-          <p class="helper">Your $60K first-year vest implies a $600K grant at 10%.</p>
+          <h3>Initial equity grant</h3>
+          <p class="helper">Annual vested value is calculated from the grant value and vesting schedule.</p>
           <div class="fields">
-            <label>Total grant value
-              <div class="input-wrap"><input id="stockGrant" type="range" min="0" max="5000000" step="10000" value="600000"></div>
+            <label>Initial equity grant value
+              <div class="input-wrap"><input id="stockGrant" type="range" min="0" max="5000000" step="10000" value="800000"></div>
             </label>
           </div>
           <div class="year-inputs" id="vestingInputs">
-            <label>Year 1 vest<input class="percent vesting" type="range" min="0" max="100" step="1" value="10"></label>
-            <label>Year 2 vest<input class="percent vesting" type="range" min="0" max="100" step="1" value="10"></label>
-            <label>Year 3 vest<input class="percent vesting" type="range" min="0" max="100" step="1" value="40"></label>
-            <label>Year 4 vest<input class="percent vesting" type="range" min="0" max="100" step="1" value="40"></label>
-            <label>Year 5 vest<input class="percent vesting" type="range" min="0" max="100" step="1" value="0"></label>
+            <label>Year 1 vesting share<input class="percent vesting" type="range" min="0" max="100" step="1" value="25"></label>
+            <label>Year 2 vesting share<input class="percent vesting" type="range" min="0" max="100" step="1" value="25"></label>
+            <label>Year 3 vesting share<input class="percent vesting" type="range" min="0" max="100" step="1" value="25"></label>
+            <label>Year 4 vesting share<input class="percent vesting" type="range" min="0" max="100" step="1" value="25"></label>
+            <label>Year 5 vesting share<input class="percent vesting" type="range" min="0" max="100" step="1" value="0"></label>
           </div>
           <p class="helper" id="vestingTotal">Vesting schedule total: 100%</p>
         </section>
 
         <section class="section">
-          <h3>Sign-on cash by year</h3>
+          <h3>Signing bonus by year</h3>
           <div class="year-inputs" id="signonInputs">
-            <label class="money">Year 1<input class="signon" type="range" min="0" max="1000000" step="1000" value="128000"></label>
+            <label class="money">Year 1<input class="signon" type="range" min="0" max="1000000" step="1000" value="100000"></label>
             <label class="money">Year 2<input class="signon" type="range" min="0" max="1000000" step="1000" value="0"></label>
             <label class="money">Year 3<input class="signon" type="range" min="0" max="1000000" step="1000" value="0"></label>
             <label class="money">Year 4<input class="signon" type="range" min="0" max="1000000" step="1000" value="0"></label>
@@ -782,8 +795,8 @@
         </section>
 
         <section class="section">
-          <h3>Expected refresh equity vest</h3>
-          <p class="helper">Optional: enter only the amount expected to vest in each year.</p>
+          <h3>Expected refresh equity vesting</h3>
+          <p class="helper">Enter the estimated refresh equity value vesting in each year.</p>
           <div class="year-inputs" id="refreshInputs">
             <label class="money">Year 1<input class="refresh" type="range" min="0" max="1000000" step="1000" value="0"></label>
             <label class="money">Year 2<input class="refresh" type="range" min="0" max="1000000" step="1000" value="0"></label>
@@ -806,22 +819,22 @@
         </section>
       </aside>
 
-      <section class="results" aria-live="polite">
+      <section class="results">
         <div class="summary-grid">
           <article class="panel metric primary">
-            <div class="label">Five-year total <span>Y1–Y5</span></div>
-            <div class="value" id="fiveYearTotal">$1.79M</div>
-            <div class="sub" id="fiveYearTargetGap">$1.46M below your five-year target</div>
+            <div class="label">Total compensation <span>Years 1–5</span></div>
+            <div class="value" id="fiveYearTotal">—</div>
+            <div class="sub" id="fiveYearTargetGap">Compared with your five-year target</div>
           </article>
           <article class="panel metric">
-            <div class="label">Year 1 TC</div>
-            <div class="value" id="yearOneTotal">$400K</div>
-            <div class="sub">Matches the presented offer</div>
+            <div class="label">Year 1 compensation</div>
+            <div class="value" id="yearOneTotal">—</div>
+            <div class="sub">Includes all Year 1 components</div>
           </article>
           <article class="panel metric">
-            <div class="label">Average annual TC</div>
-            <div class="value" id="averageTotal">$358K</div>
-            <div class="sub" id="fourYearAverage">Four-year average: $395K</div>
+            <div class="label">Average annual compensation</div>
+            <div class="value" id="averageTotal">—</div>
+            <div class="sub" id="fourYearAverage">Four-year average: —</div>
           </article>
         </div>
 
@@ -829,14 +842,14 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Compensation timeline</p>
-              <h2>See the cliffs before you sign</h2>
+              <h2>See how compensation changes by year</h2>
             </div>
             <div class="legend">
               <span class="base">Base</span>
               <span class="bonus">Bonus</span>
-              <span class="stock">Initial stock</span>
-              <span class="signon">Sign-on</span>
-              <span class="other">Refresh</span>
+              <span class="stock">Initial equity</span>
+              <span class="signon">Signing bonus</span>
+              <span class="other">Refresh equity</span>
               <span class="other-cash">Other cash</span>
             </div>
           </div>
@@ -848,13 +861,14 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">Full breakdown</p>
-              <h2>Every dollar, every year</h2>
+              <h2>Every component, every year</h2>
             </div>
           </div>
           <div class="table-scroll">
             <table>
+              <caption class="sr-only">Five-year compensation by component</caption>
               <thead>
-                <tr><th>Component</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th><th>Year 5</th></tr>
+                <tr><th scope="col">Component</th><th scope="col">Year 1</th><th scope="col">Year 2</th><th scope="col">Year 3</th><th scope="col">Year 4</th><th scope="col">Year 5</th></tr>
               </thead>
               <tbody id="breakdown"></tbody>
             </table>
@@ -867,8 +881,8 @@
             <p id="targetInsight">You need additional compensation to reach your target.</p>
           </div>
           <div class="callout">
-            <h3>Negotiation lens</h3>
-            <p id="cliffInsight">Your largest compensation drop occurs after stock vesting ends.</p>
+            <h3>Year-over-year change</h3>
+            <p id="cliffInsight">Year-over-year changes will appear here.</p>
           </div>
         </article>
       </section>
@@ -878,31 +892,31 @@
       <div class="scenario-header">
         <div>
           <p class="eyebrow">Scenario explorer</p>
-          <h2>Search thousands of package combinations</h2>
-          <p class="intro">Choose a minimum, maximum, and increment for each lever. The explorer finds combinations below, within, and above your target band.</p>
+          <h2>Compare compensation combinations</h2>
+          <p class="intro">Choose a minimum, maximum, and increment for base salary, initial equity, and Year 1 signing bonus.</p>
         </div>
       </div>
 
       <div class="scenario-config">
         <div class="range-card">
           <h3>Base salary range</h3>
-          <label>Minimum<input id="scenarioBaseMin" type="range" min="0" max="500000" step="5000" value="180000"></label>
-          <label>Maximum<input id="scenarioBaseMax" type="range" min="0" max="500000" step="5000" value="250000"></label>
-          <label>Increment<input id="scenarioBaseStep" type="range" min="5000" max="100000" step="5000" value="10000"></label>
+          <label>Minimum<input id="scenarioBaseMin" type="range" min="0" max="500000" step="5000" value="150000"></label>
+          <label>Maximum<input id="scenarioBaseMax" type="range" min="0" max="500000" step="5000" value="300000"></label>
+          <label>Increment<input id="scenarioBaseStep" type="range" min="5000" max="100000" step="5000" value="25000"></label>
         </div>
 
         <div class="range-card">
           <h3>Initial equity grant range</h3>
-          <label>Minimum<input id="scenarioEquityMin" type="range" min="0" max="5000000" step="10000" value="600000"></label>
-          <label>Maximum<input id="scenarioEquityMax" type="range" min="0" max="5000000" step="10000" value="1000000"></label>
-          <label>Increment<input id="scenarioEquityStep" type="range" min="10000" max="500000" step="10000" value="50000"></label>
+          <label>Minimum<input id="scenarioEquityMin" type="range" min="0" max="5000000" step="10000" value="400000"></label>
+          <label>Maximum<input id="scenarioEquityMax" type="range" min="0" max="5000000" step="10000" value="1200000"></label>
+          <label>Increment<input id="scenarioEquityStep" type="range" min="10000" max="500000" step="10000" value="100000"></label>
         </div>
 
         <div class="range-card">
-          <h3>Year 1 sign-on range</h3>
-          <label>Minimum<input id="scenarioSignonMin" type="range" min="0" max="1000000" step="5000" value="125000"></label>
-          <label>Maximum<input id="scenarioSignonMax" type="range" min="0" max="1000000" step="5000" value="350000"></label>
-          <label>Increment<input id="scenarioSignonStep" type="range" min="5000" max="250000" step="5000" value="25000"></label>
+          <h3>Year 1 signing bonus range</h3>
+          <label>Minimum<input id="scenarioSignonMin" type="range" min="0" max="1000000" step="5000" value="0"></label>
+          <label>Maximum<input id="scenarioSignonMax" type="range" min="0" max="1000000" step="5000" value="300000"></label>
+          <label>Increment<input id="scenarioSignonStep" type="range" min="5000" max="250000" step="5000" value="50000"></label>
         </div>
       </div>
 
@@ -919,13 +933,13 @@
         <label>Target tolerance
           <input class="percent" id="scenarioTolerance" type="range" min="0" max="25" step="1" value="5">
         </label>
-        <button class="start-button" id="scenarioStart" type="button">Start analysis</button>
+        <button class="start-button" id="scenarioStart" type="button">Run scenarios</button>
       </div>
-      <p class="scenario-error" id="scenarioError"></p>
+      <p class="scenario-error" id="scenarioError" role="alert"></p>
 
       <div class="scenario-results" id="scenarioResults">
         <div class="scenario-summary">
-          <div class="scenario-stat"><span class="label">Tested</span><strong id="scenarioTested">0</strong></div>
+          <div class="scenario-stat"><span class="label">Scenarios tested</span><strong id="scenarioTested">0</strong></div>
           <div class="scenario-stat below"><span class="label">Below band</span><strong id="scenarioBelow">0</strong></div>
           <div class="scenario-stat within"><span class="label">Within band</span><strong id="scenarioWithin">0</strong></div>
           <div class="scenario-stat above"><span class="label">Above band</span><strong id="scenarioAbove">0</strong></div>
@@ -933,9 +947,9 @@
 
         <div class="scenario-charts">
           <div class="scenario-chart">
-            <h3>Base pay vs. total compensation</h3>
+            <h3>Base salary vs. selected compensation metric</h3>
             <p class="helper">Each point is one package. Color shows its position relative to your target band.</p>
-            <canvas id="scenarioScatter"></canvas>
+            <canvas id="scenarioScatter" role="img" aria-label="Scatter plot of base salary against the selected compensation metric"></canvas>
             <div class="scenario-legend">
               <span><i class="below"></i>Below</span>
               <span><i class="within"></i>Within target</span>
@@ -944,8 +958,8 @@
           </div>
           <div class="scenario-chart">
             <h3>Compensation distribution</h3>
-            <p class="helper">Tap a bar to inspect every package in that compensation range.</p>
-            <canvas id="scenarioHistogram"></canvas>
+            <p class="helper">Select a bar to inspect scenarios in that compensation range.</p>
+            <canvas id="scenarioHistogram" role="img" tabindex="0" aria-label="Compensation distribution. Select a bar to filter the table."></canvas>
           </div>
         </div>
 
@@ -957,14 +971,15 @@
         </div>
         <div class="table-scroll">
           <table>
+            <caption class="sr-only">Generated compensation scenarios</caption>
             <thead>
               <tr>
-                <th><button class="sort-button" data-sort="status" type="button">Status</button></th>
-                <th><button class="sort-button" data-sort="base" type="button">Base</button></th>
-                <th><button class="sort-button" data-sort="equity" type="button">Equity grant</button></th>
-                <th><button class="sort-button" data-sort="signon" type="button">Year 1 sign-on</button></th>
-                <th><button class="sort-button" data-sort="total" id="scenarioMetricHeading" type="button">Year 1 TC</button></th>
-                <th><button class="sort-button" data-sort="difference" type="button">Difference</button></th>
+                <th scope="col"><button class="sort-button" data-sort="status" type="button">Target status</button></th>
+                <th scope="col"><button class="sort-button" data-sort="base" type="button">Base</button></th>
+                <th scope="col"><button class="sort-button" data-sort="equity" type="button">Equity grant</button></th>
+                <th scope="col"><button class="sort-button" data-sort="signon" type="button">Year 1 signing bonus</button></th>
+                <th scope="col"><button class="sort-button" data-sort="total" id="scenarioMetricHeading" type="button">Year 1 compensation</button></th>
+                <th scope="col"><button class="sort-button" data-sort="difference" type="button">Difference from target</button></th>
               </tr>
             </thead>
             <tbody id="scenarioMatches"></tbody>
@@ -980,19 +995,19 @@
       </div>
     </section>
 
-    <footer>Grant values exclude future stock-price movement. Bonus assumes 100% target payout. Refresh grants are not guaranteed unless written into the offer.</footer>
+    <footer>Figures are gross nominal estimates. Stock-price changes, taxes, inflation, and probability of payment are not modeled. Bonus assumes 100% target payout; equity and other payments may depend on plan and employment terms.</footer>
   </main>
 
   <script>
     const defaults = {
       currency: "USD",
-      base: 180000,
-      growth: 0,
-      bonusRate: 18,
-      target: 650000,
-      stockGrant: 600000,
-      vesting: [10, 10, 40, 40, 0],
-      signon: [128000, 0, 0, 0, 0],
+      base: 200000,
+      growth: 3,
+      bonusRate: 15,
+      target: 500000,
+      stockGrant: 800000,
+      vesting: [25, 25, 25, 25, 0],
+      signon: [100000, 0, 0, 0, 0],
       refresh: [0, 0, 0, 0, 0],
       otherCash: [0, 0, 0, 0, 0]
     };
@@ -1038,18 +1053,23 @@
       };
     }
 
-    function calculate() {
-      const input = values();
-      const years = Array.from({ length: 5 }, (_, index) => {
-        const base = input.base * Math.pow(1 + input.growth, index);
+    function compensationYears(input, overrides = {}) {
+      const startingBase = overrides.base ?? input.base;
+      const equityGrant = overrides.equity ?? input.stockGrant;
+      return Array.from({ length: 5 }, (_, index) => {
+        const base = startingBase * Math.pow(1 + input.growth, index);
         const bonus = base * input.bonusRate;
-        const stock = input.stockGrant * (input.vesting[index] / 100);
-        const signon = input.signon[index];
+        const stock = equityGrant * (input.vesting[index] / 100);
+        const signon = index === 0 && overrides.signon !== undefined ? overrides.signon : input.signon[index];
         const refresh = input.refresh[index];
         const otherCash = input.otherCash[index];
         return { base, bonus, stock, signon, refresh, otherCash, total: base + bonus + stock + signon + refresh + otherCash };
       });
+    }
 
+    function calculate() {
+      const input = values();
+      const years = compensationYears(input);
       render(input, years);
     }
 
@@ -1061,18 +1081,38 @@
       const gap = targetTotal - fiveYearTotal;
       const vestingTotal = input.vesting.reduce((sum, value) => sum + value, 0);
 
-      $("#currencyHelper").textContent = `Amounts are in ${input.currency}. Changes update instantly.`;
+      $("#currencyHelper").textContent = `Amounts are displayed in ${input.currency}. Changing this setting does not convert values.`;
       updateSliders();
 
       $("#fiveYearTotal").textContent = compactMoney(fiveYearTotal);
       $("#yearOneTotal").textContent = compactMoney(years[0].total);
       $("#averageTotal").textContent = compactMoney(average);
       $("#fourYearAverage").textContent = `Four-year average: ${compactMoney(fourYearTotal / 4)}`;
-      $("#vestingTotal").textContent = `Vesting schedule total: ${vestingTotal}%${vestingTotal !== 100 ? " — check this" : ""}`;
-      $("#vestingTotal").style.color = vestingTotal === 100 ? "var(--muted)" : "var(--coral)";
+      const vestingMessage = vestingTotal > 100
+        ? " — invalid; total cannot exceed 100%"
+        : vestingTotal < 100
+          ? ` — ${100 - vestingTotal}% vests after Year 5 or remains unallocated`
+          : "";
+      $("#vestingTotal").textContent = `Vesting schedule total: ${vestingTotal}%${vestingMessage}`;
+      $("#vestingTotal").style.color = vestingTotal > 100 ? "var(--danger)" : "var(--muted)";
 
       const gapElement = $("#fiveYearTargetGap");
-      if (gap > 0) {
+      if (vestingTotal > 100) {
+        $("#fiveYearTotal").textContent = "—";
+        $("#yearOneTotal").textContent = "—";
+        $("#averageTotal").textContent = "—";
+        $("#fourYearAverage").textContent = "Correct the vesting schedule to calculate totals";
+        gapElement.textContent = "Vesting schedule exceeds 100%";
+        gapElement.className = "sub";
+        $("#chart").innerHTML = "";
+        $("#breakdown").innerHTML = "";
+        $("#targetInsight").textContent = "Reduce the vesting schedule total to 100% or less.";
+        $("#cliffInsight").textContent = "Year-over-year changes will appear after the schedule is corrected.";
+        return;
+      } else if (Math.abs(gap) < .5) {
+        gapElement.textContent = "Meets your five-year target";
+        gapElement.className = "sub positive";
+      } else if (gap > 0) {
         gapElement.textContent = `${compactMoney(gap)} below your five-year target`;
         gapElement.className = "sub";
       } else {
@@ -1087,11 +1127,19 @@
 
     function renderChart(years) {
       const max = Math.max(...years.map((year) => year.total), 1);
+      const componentLabels = {
+        base: "Base salary",
+        bonus: "Target bonus",
+        stock: "Initial equity",
+        signon: "Signing bonus",
+        refresh: "Refresh equity",
+        otherCash: "Other cash"
+      };
       $("#chart").innerHTML = years.map((year) => {
         const height = Math.max(2, (year.total / max) * 230);
         const segments = ["base", "bonus", "stock", "signon", "refresh", "otherCash"].map((key) => {
           const segmentHeight = year.total ? (year[key] / year.total) * height : 0;
-          return `<div class="segment ${key}" style="height:${segmentHeight}px" title="${key}: ${money(year[key])}"></div>`;
+          return `<div class="segment ${key}" style="height:${segmentHeight}px" title="${componentLabels[key]}: ${money(year[key])}"></div>`;
         }).join("");
         return `<div class="bar-column"><div class="bar-total">${compactMoney(year.total)}</div><div class="bar" style="height:${height}px">${segments}</div></div>`;
       }).join("");
@@ -1102,7 +1150,7 @@
         ["Base salary", "base"],
         ["Target bonus", "bonus"],
         ["Initial stock vest", "stock"],
-        ["Sign-on cash", "signon"],
+        ["Signing bonus", "signon"],
         ["Refresh equity vest", "refresh"],
         ["Other cash", "otherCash"],
         ["Total compensation", "total"]
@@ -1115,11 +1163,13 @@
 
     function renderInsights(input, years, gap) {
       const gapInsight = $("#targetInsight");
-      if (gap > 0) {
+      if (Math.abs(gap) < .5) {
+        gapInsight.innerHTML = `This scenario <strong class="positive">meets your ${compactMoney(input.target)} annual target</strong> on a five-year average.`;
+      } else if (gap > 0) {
         const annualGap = gap / 5;
-        gapInsight.innerHTML = `The offer is <strong class="gap-value">${compactMoney(annualGap)} per year</strong> below your ${compactMoney(input.target)} target on a five-year average. That is ${compactMoney(gap)} in total.`;
+        gapInsight.innerHTML = `This scenario is <strong class="gap-value">${compactMoney(annualGap)} per year</strong> below your ${compactMoney(input.target)} target on a five-year average. That is ${compactMoney(gap)} in total.`;
       } else {
-        gapInsight.innerHTML = `The offer is <strong class="positive">${compactMoney(Math.abs(gap) / 5)} per year above</strong> your target on a five-year average.`;
+        gapInsight.innerHTML = `This scenario is <strong class="positive">${compactMoney(Math.abs(gap) / 5)} per year above</strong> your target on a five-year average.`;
       }
 
       let largestDrop = { amount: 0, from: 1, to: 2 };
@@ -1130,7 +1180,7 @@
 
       const cliffInsight = $("#cliffInsight");
       if (largestDrop.amount > 0) {
-        cliffInsight.innerHTML = `The largest cliff is <strong>${compactMoney(largestDrop.amount)}</strong> from Year ${largestDrop.from} to Year ${largestDrop.to}. Ask about refresh grants or additional cash before relying on the headline TC.`;
+        cliffInsight.innerHTML = `The largest decline is <strong>${compactMoney(largestDrop.amount)}</strong> from Year ${largestDrop.from} to Year ${largestDrop.to}. Review whether future equity or cash offsets this change.`;
       } else {
         cliffInsight.textContent = "There is no year-over-year compensation drop in this scenario.";
       }
@@ -1158,17 +1208,13 @@
 
     function steppedValues(min, max, step) {
       const count = Math.floor((max - min) / step) + 1;
-      return Array.from({ length: count }, (_, index) => Math.round(min + index * step));
+      const result = Array.from({ length: count }, (_, index) => Math.round(min + index * step));
+      if (result[result.length - 1] < max) result.push(max);
+      return result;
     }
 
     function scenarioMetricValue(input, base, equity, signon, metric) {
-      const totals = Array.from({ length: 5 }, (_, index) => {
-        const yearlyBase = base * Math.pow(1 + input.growth, index);
-        const bonus = yearlyBase * input.bonusRate;
-        const stock = equity * (input.vesting[index] / 100);
-        const yearlySignon = index === 0 ? signon : input.signon[index];
-        return yearlyBase + bonus + stock + yearlySignon + input.refresh[index] + input.otherCash[index];
-      });
+      const totals = compensationYears(input, { base, equity, signon }).map((year) => year.total);
       if (metric === "fourYear") return totals.slice(0, 4).reduce((sum, value) => sum + value, 0) / 4;
       if (metric === "fiveYear") return totals.reduce((sum, value) => sum + value, 0) / 5;
       return totals[0];
@@ -1192,6 +1238,12 @@
       const error = $("#scenarioError");
       error.textContent = "";
 
+      const vestingTotal = input.vesting.reduce((sum, value) => sum + value, 0);
+      if (vestingTotal > 100) {
+        error.textContent = "The vesting schedule exceeds 100%. Correct it before running scenarios.";
+        $("#scenarioResults").classList.remove("visible");
+        return;
+      }
       if (config.baseMax < config.baseMin || config.equityMax < config.equityMin || config.signonMax < config.signonMin) {
         error.textContent = "Each maximum must be greater than or equal to its minimum.";
         $("#scenarioResults").classList.remove("visible");
@@ -1208,7 +1260,7 @@
       const signons = steppedValues(config.signonMin, config.signonMax, config.signonStep);
       const combinationCount = bases.length * equities.length * signons.length;
       if (combinationCount > 100000) {
-        error.textContent = `${combinationCount.toLocaleString()} combinations is too many. Increase one or more increments to stay under 100,000.`;
+        error.textContent = `This range creates ${combinationCount.toLocaleString()} combinations. Increase one or more increments to remain below 100,000.`;
         $("#scenarioResults").classList.remove("visible");
         return;
       }
@@ -1231,6 +1283,7 @@
       scenarioView.selectedBin = null;
       scenarioView.limit = 20;
       lastScenarioState = { scenarios, target: input.target, lower, upper, metric: config.metric };
+      $("#scenarioHistogram").setAttribute("aria-label", "Compensation distribution. Select a bar to filter the table.");
       renderScenarioResults(lastScenarioState);
     }
 
@@ -1240,7 +1293,7 @@
         return result;
       }, { below: 0, within: 0, above: 0 });
       const metricLabels = {
-        year1: "Year 1 TC",
+        year1: "Year 1 compensation",
         fourYear: "4-year average",
         fiveYear: "5-year average"
       };
@@ -1279,12 +1332,24 @@
         return `<tr><td><span class="${scenario.status === "within" ? "positive" : scenario.status === "below" ? "gap-value" : ""}">${label}</span></td><td>${compactMoney(scenario.base)}</td><td>${compactMoney(scenario.equity)}</td><td>${compactMoney(scenario.signon)}</td><td>${compactMoney(scenario.total)}</td><td>${difference}</td></tr>`;
       }).join("");
 
+      const sortLabels = {
+        status: "target status",
+        base: "base salary",
+        equity: "equity grant",
+        signon: "signing bonus",
+        total: "compensation",
+        difference: "difference from target"
+      };
+      const sortDescription = scenarioView.sortKey === "closeness"
+        ? "ordered nearest to target"
+        : `sorted by ${sortLabels[scenarioView.sortKey]} ${scenarioView.sortDirection === "asc" ? "ascending" : "descending"}`;
+
       if (scenarioView.selectedBin) {
         $("#scenarioTableTitle").textContent = `${compactMoney(scenarioView.selectedBin.min)}–${compactMoney(scenarioView.selectedBin.max)} packages`;
-        $("#scenarioTableNote").textContent = `Showing ${Math.min(visible.length, candidates.length).toLocaleString()} of ${candidates.length.toLocaleString()} packages from the selected bar.`;
+        $("#scenarioTableNote").textContent = `Showing ${Math.min(visible.length, candidates.length).toLocaleString()} of ${candidates.length.toLocaleString()} packages from the selected bar, ${sortDescription}.`;
       } else {
-        $("#scenarioTableTitle").textContent = "Packages nearest your target";
-        $("#scenarioTableNote").textContent = `Showing ${Math.min(visible.length, candidates.length).toLocaleString()} of ${candidates.length.toLocaleString()} packages, ordered nearest to target.`;
+        $("#scenarioTableTitle").textContent = scenarioView.sortKey === "closeness" ? "Packages nearest your target" : "Generated packages";
+        $("#scenarioTableNote").textContent = `Showing ${Math.min(visible.length, candidates.length).toLocaleString()} of ${candidates.length.toLocaleString()} packages, ${sortDescription}.`;
       }
 
       $("#scenarioClearFilter").classList.toggle("visible", Boolean(scenarioView.selectedBin));
@@ -1299,7 +1364,7 @@
     }
 
     function canvasContext(canvas) {
-      const width = Math.max(300, canvas.clientWidth);
+      const width = Math.max(1, canvas.getBoundingClientRect().width);
       const height = 280;
       const ratio = window.devicePixelRatio || 1;
       canvas.width = width * ratio;
@@ -1309,18 +1374,28 @@
       return { context, width, height };
     }
 
+    function scenarioExtent(scenarios, key) {
+      let min = Infinity;
+      let max = -Infinity;
+      scenarios.forEach((scenario) => {
+        min = Math.min(min, scenario[key]);
+        max = Math.max(max, scenario[key]);
+      });
+      return { min, max };
+    }
+
     function drawScenarioScatter(state) {
       const canvas = $("#scenarioScatter");
       const { context, width, height } = canvasContext(canvas);
       const padding = { top: 12, right: 12, bottom: 34, left: 58 };
       const plotWidth = width - padding.left - padding.right;
       const plotHeight = height - padding.top - padding.bottom;
-      const bases = state.scenarios.map((scenario) => scenario.base);
-      const totals = state.scenarios.map((scenario) => scenario.total);
-      const minX = Math.min(...bases);
-      const maxX = Math.max(...bases);
-      const rawMinY = Math.min(...totals, state.lower);
-      const rawMaxY = Math.max(...totals, state.upper);
+      const baseExtent = scenarioExtent(state.scenarios, "base");
+      const totalExtent = scenarioExtent(state.scenarios, "total");
+      const minX = baseExtent.min;
+      const maxX = baseExtent.max;
+      const rawMinY = Math.min(totalExtent.min, state.lower);
+      const rawMaxY = Math.max(totalExtent.max, state.upper);
       const yPadding = Math.max((rawMaxY - rawMinY) * .08, 1);
       const minY = Math.max(0, rawMinY - yPadding);
       const maxY = rawMaxY + yPadding;
@@ -1366,27 +1441,32 @@
       const padding = { top: 12, right: 12, bottom: 34, left: 42 };
       const plotWidth = width - padding.left - padding.right;
       const plotHeight = height - padding.top - padding.bottom;
-      const totals = state.scenarios.map((scenario) => scenario.total);
-      const min = Math.min(...totals);
-      const max = Math.max(...totals);
-      const binCount = 24;
-      const binWidth = Math.max((max - min) / binCount, 1);
-      const bins = Array(binCount).fill(0);
-      totals.forEach((total) => {
-        const index = Math.min(binCount - 1, Math.floor((total - min) / binWidth));
-        bins[index]++;
+      const totalExtent = scenarioExtent(state.scenarios, "total");
+      const min = totalExtent.min;
+      const max = totalExtent.max;
+      const binCount = max === min ? 1 : 24;
+      const binWidth = max === min ? 1 : (max - min) / binCount;
+      const bins = Array.from({ length: binCount }, () => ({ below: 0, within: 0, above: 0, total: 0 }));
+      state.scenarios.forEach((scenario) => {
+        const index = Math.min(binCount - 1, Math.floor((scenario.total - min) / binWidth));
+        bins[index][scenario.status]++;
+        bins[index].total++;
       });
-      const largest = Math.max(...bins, 1);
+      const largest = Math.max(...bins.map((bin) => bin.total), 1);
       const barWidth = plotWidth / binCount;
       histogramGeometry = { min, max, binWidth, binCount, padding, barWidth, plotWidth };
 
-      bins.forEach((count, index) => {
-        const midpoint = min + (index + .5) * binWidth;
-        const status = midpoint < state.lower ? "below" : midpoint > state.upper ? "above" : "within";
-        context.fillStyle = status === "below" ? "#ed765e" : status === "above" ? "#4f76a8" : "#26765b";
-        context.globalAlpha = .82;
-        const barHeight = (count / largest) * plotHeight;
-        context.fillRect(padding.left + index * barWidth + 1, padding.top + plotHeight - barHeight, Math.max(1, barWidth - 2), barHeight);
+      const colors = { below: "#ed765e", within: "#26765b", above: "#4f76a8" };
+      bins.forEach((bin, index) => {
+        const barHeight = (bin.total / largest) * plotHeight;
+        let segmentBottom = padding.top + plotHeight;
+        ["below", "within", "above"].forEach((status) => {
+          const segmentHeight = bin.total ? (bin[status] / bin.total) * barHeight : 0;
+          segmentBottom -= segmentHeight;
+          context.fillStyle = colors[status];
+          context.globalAlpha = .82;
+          context.fillRect(padding.left + index * barWidth + 1, segmentBottom, Math.max(1, barWidth - 2), segmentHeight);
+        });
         if (scenarioView.selectedBin?.index === index) {
           context.strokeStyle = "#17211b";
           context.lineWidth = 2;
@@ -1401,9 +1481,9 @@
       context.stroke();
       context.fillStyle = "#66736b";
       context.font = "11px system-ui";
-      const tickCount = width < 420 ? 3 : 5;
+      const tickCount = max === min ? 1 : width < 420 ? 3 : 5;
       for (let index = 0; index < tickCount; index++) {
-        const ratio = index / (tickCount - 1);
+        const ratio = tickCount === 1 ? .5 : index / (tickCount - 1);
         const tickX = padding.left + ratio * plotWidth;
         const tickValue = min + ratio * (max - min);
         context.beginPath();
@@ -1418,7 +1498,34 @@
       context.fillText("0", padding.left - 6, padding.top + plotHeight + 4);
     }
 
+    function selectHistogramBin(index) {
+      if (!lastScenarioState || !histogramGeometry) return;
+      const { min, max, binWidth, binCount } = histogramGeometry;
+      const safeIndex = Math.max(0, Math.min(binCount - 1, index));
+      scenarioView.selectedBin = {
+        index: safeIndex,
+        min: min + safeIndex * binWidth,
+        max: safeIndex === binCount - 1 ? max : min + (safeIndex + 1) * binWidth,
+        isLast: safeIndex === binCount - 1
+      };
+      scenarioView.sortKey = "total";
+      scenarioView.sortDirection = "asc";
+      scenarioView.limit = 50;
+      $("#scenarioHistogram").setAttribute("aria-label", `Selected compensation range ${money(scenarioView.selectedBin.min)} to ${money(scenarioView.selectedBin.max)}. The table is filtered to this range.`);
+      renderScenarioTable(lastScenarioState);
+      drawScenarioHistogram(lastScenarioState);
+    }
+
+    function invalidateScenarioResults(message) {
+      if (!lastScenarioState) return;
+      lastScenarioState = null;
+      histogramGeometry = null;
+      $("#scenarioResults").classList.remove("visible");
+      $("#scenarioError").textContent = message;
+    }
+
     function reset() {
+      invalidateScenarioResults("Inputs were reset. Run the scenarios again to refresh the results.");
       $("#currency").value = defaults.currency;
       $("#base").value = defaults.base;
       $("#growth").value = defaults.growth;
@@ -1449,20 +1556,18 @@
       if (!lastScenarioState || !histogramGeometry) return;
       const rectangle = event.currentTarget.getBoundingClientRect();
       const clickX = event.clientX - rectangle.left;
-      const { min, max, binWidth, binCount, padding, barWidth, plotWidth } = histogramGeometry;
+      const { binCount, padding, barWidth, plotWidth } = histogramGeometry;
       if (clickX < padding.left || clickX > padding.left + plotWidth) return;
       const index = Math.min(binCount - 1, Math.floor((clickX - padding.left) / barWidth));
-      scenarioView.selectedBin = {
-        index,
-        min: min + index * binWidth,
-        max: index === binCount - 1 ? max : min + (index + 1) * binWidth,
-        isLast: index === binCount - 1
-      };
-      scenarioView.sortKey = "total";
-      scenarioView.sortDirection = "asc";
-      scenarioView.limit = 50;
-      renderScenarioTable(lastScenarioState);
-      drawScenarioHistogram(lastScenarioState);
+      selectHistogramBin(index);
+    });
+    $("#scenarioHistogram").addEventListener("keydown", (event) => {
+      if (!histogramGeometry || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const current = scenarioView.selectedBin?.index ?? 0;
+      if (event.key === "Home") selectHistogramBin(0);
+      else if (event.key === "End") selectHistogramBin(histogramGeometry.binCount - 1);
+      else selectHistogramBin(current + (event.key === "ArrowRight" ? 1 : -1));
     });
     $("#scenarioClearFilter").addEventListener("click", () => {
       scenarioView.selectedBin = null;
@@ -1477,6 +1582,12 @@
     $("#scenarioShowMore").addEventListener("click", () => {
       scenarioView.limit += 50;
       if (lastScenarioState) renderScenarioTable(lastScenarioState);
+    });
+    $$("#base, #growth, #bonusRate, #target, #stockGrant, .vesting, .signon, .refresh, .other-cash, #currency").forEach((input) => {
+      input.addEventListener("input", () => invalidateScenarioResults("Compensation inputs changed. Run the scenarios again to refresh the results."));
+    });
+    $$(".scenario-config input, #scenarioMetric, #scenarioTolerance").forEach((input) => {
+      input.addEventListener("input", () => invalidateScenarioResults("Scenario settings changed. Run the scenarios again to refresh the results."));
     });
     window.addEventListener("resize", () => {
       if (lastScenarioState) {
