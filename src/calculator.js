@@ -86,8 +86,9 @@ export function compareToTarget(value, target, tolerance = 0) {
   requireFiniteNonNegative("tolerance", tolerance);
   if (tolerance > 1) throw new RangeError("tolerance must not exceed 1.");
 
-  const lower = target * (1 - tolerance);
-  const upper = target * (1 + tolerance);
+  const margin = target * tolerance;
+  const lower = target - margin;
+  const upper = target + margin;
   return {
     lower,
     upper,

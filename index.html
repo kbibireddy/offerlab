@@ -1234,8 +1234,9 @@
         return;
       }
 
-      const lower = input.target * (1 - config.tolerance);
-      const upper = input.target * (1 + config.tolerance);
+      const targetMargin = input.target * config.tolerance;
+      const lower = input.target - targetMargin;
+      const upper = input.target + targetMargin;
       const scenarios = generateScenarios(input, config);
 
       scenarioView.sortKey = "closeness";
