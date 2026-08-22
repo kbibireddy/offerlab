@@ -1008,6 +1008,7 @@
       validateScenarioConfig,
       vestingTotal
     } from "./src/calculator.js";
+    import { readCompensationInputs } from "./src/form.js";
 
     const defaults = {
       currency: "USD",
@@ -1049,18 +1050,7 @@
     };
 
     function values() {
-      return {
-        currency: currentCurrency(),
-        base: number($("#base")),
-        growth: number($("#growth")) / 100,
-        bonusRate: number($("#bonusRate")) / 100,
-        target: number($("#target")),
-        stockGrant: number($("#stockGrant")),
-        vesting: $$(".vesting").map(number),
-        signon: $$(".signon").map(number),
-        refresh: $$(".refresh").map(number),
-        otherCash: $$(".other-cash").map(number)
-      };
+      return readCompensationInputs(document);
     }
 
     function calculate() {
@@ -1475,10 +1465,10 @@
       $("#bonusRate").value = defaults.bonusRate;
       $("#target").value = defaults.target;
       $("#stockGrant").value = defaults.stockGrant;
-      $$(".vesting").forEach((element, index) => element.value = defaults.vesting[index]);
-      $$(".signon").forEach((element, index) => element.value = defaults.signon[index]);
-      $$(".refresh").forEach((element, index) => element.value = defaults.refresh[index]);
-      $$(".other-cash").forEach((element, index) => element.value = defaults.otherCash[index]);
+      $$("input.vesting").forEach((element, index) => element.value = defaults.vesting[index]);
+      $$("input.signon").forEach((element, index) => element.value = defaults.signon[index]);
+      $$("input.refresh").forEach((element, index) => element.value = defaults.refresh[index]);
+      $$("input.other-cash").forEach((element, index) => element.value = defaults.otherCash[index]);
       calculate();
     }
 
@@ -1526,7 +1516,7 @@
       scenarioView.limit += 50;
       if (lastScenarioState) renderScenarioTable(lastScenarioState);
     });
-    $$("#base, #growth, #bonusRate, #target, #stockGrant, .vesting, .signon, .refresh, .other-cash, #currency").forEach((input) => {
+    $$("#base, #growth, #bonusRate, #target, #stockGrant, input.vesting, input.signon, input.refresh, input.other-cash, #currency").forEach((input) => {
       input.addEventListener("input", () => invalidateScenarioResults("Compensation inputs changed. Run the scenarios again to refresh the results."));
     });
     $$(".scenario-config input, #scenarioMetric, #scenarioTolerance").forEach((input) => {
