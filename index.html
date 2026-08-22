@@ -1023,7 +1023,7 @@
         <div>
           <p class="eyebrow">Scenario explorer</p>
           <h2>Compare compensation combinations</h2>
-          <p class="intro">Choose a minimum, maximum, and increment for base salary, initial equity, and Year 1 signing bonus.</p>
+          <p class="intro">Choose a minimum, maximum, and increment for base salary, initial equity grant, and Year 1 signing bonus. Equity is a total grant; Year 1 stock equals grant × Year 1 vesting share. Prefer Annualized TC when comparing with Levels.fyi-style quotes.</p>
         </div>
       </div>
 
@@ -1054,9 +1054,10 @@
         <label>Compare against target using
           <div class="input-wrap">
             <select id="scenarioMetric">
-              <option value="year1">Year 1 total compensation</option>
-              <option value="fourYear">Four-year annual average</option>
-              <option value="fiveYear">Five-year annual average</option>
+              <option value="annualized">Annualized TC (Levels-style)</option>
+              <option value="year1">Year 1 cash + vested equity</option>
+              <option value="fourYear">Four-year average received</option>
+              <option value="fiveYear">Five-year average received</option>
             </select>
           </div>
         </label>
@@ -1066,6 +1067,7 @@
         <button class="start-button" id="scenarioStart" type="button">Run scenarios</button>
       </div>
       <p class="scenario-error" id="scenarioError" role="alert"></p>
+      <p class="helper" id="scenarioAssumptions">Annualized TC = Year 1 base + bonus + equity grant ÷ vesting years (Levels-style; excludes signing bonus). Year 1 / multi-year averages use actual vested equity and include refresh, other cash, and Year 2–5 signing bonuses from the Compensation tab.</p>
 
       <div class="scenario-results" id="scenarioResults">
         <div class="scenario-summary">
@@ -1074,6 +1076,7 @@
           <div class="scenario-stat within"><span class="label">Within band</span><strong id="scenarioWithin">0</strong></div>
           <div class="scenario-stat above"><span class="label">Above band</span><strong id="scenarioAbove">0</strong></div>
         </div>
+        <p class="helper" id="scenarioCarryInNote"></p>
 
         <div class="scenario-charts">
           <div class="scenario-chart">
@@ -1107,8 +1110,10 @@
                 <th scope="col"><button class="sort-button" data-sort="status" type="button">Target status</button></th>
                 <th scope="col"><button class="sort-button" data-sort="base" type="button">Base</button></th>
                 <th scope="col"><button class="sort-button" data-sort="equity" type="button">Equity grant</button></th>
+                <th scope="col"><button class="sort-button" data-sort="annualizedEquity" type="button">Annual equity</button></th>
+                <th scope="col"><button class="sort-button" data-sort="year1Equity" type="button">Year 1 equity vest</button></th>
                 <th scope="col"><button class="sort-button" data-sort="signon" type="button">Year 1 signing bonus</button></th>
-                <th scope="col"><button class="sort-button" data-sort="total" id="scenarioMetricHeading" type="button">Year 1 compensation</button></th>
+                <th scope="col"><button class="sort-button" data-sort="total" id="scenarioMetricHeading" type="button">Annualized TC</button></th>
                 <th scope="col"><button class="sort-button" data-sort="difference" type="button">Difference from target</button></th>
               </tr>
             </thead>
@@ -1399,7 +1404,8 @@
         return result;
       }, { below: 0, within: 0, above: 0 });
       const metricLabels = {
-        year1: "Year 1 compensation",
+        annualized: "Annualized TC",
+        year1: "Year 1 cash + vested equity",
         fourYear: "4-year average",
         fiveYear: "5-year average"
       };
@@ -1409,6 +1415,17 @@
       $("#scenarioWithin").textContent = counts.within.toLocaleString();
       $("#scenarioAbove").textContent = counts.above.toLocaleString();
       $("#scenarioMetricHeading").textContent = metricLabels[state.metric];
+
+      const carryIn = state.scenarios[0]?.carryIn;
+      const carryParts = [];
+      if (carryIn?.laterSignon) carryParts.push(`${compactMoney(carryIn.laterSignon)} Year 2–5 signing`);
+      if (carryIn?.refreshTotal) carryParts.push(`${compactMoney(carryIn.refreshTotal)} refresh`);
+      if (carryIn?.otherCashTotal) carryParts.push(`${compactMoney(carryIn.otherCashTotal)} other cash`);
+      $("#scenarioCarryInNote").textContent = carryParts.length
+        ? `Multi-year averages also include Compensation-tab carry-in: ${carryParts.join(", ")}.`
+        : state.metric === "annualized"
+          ? "Annualized TC excludes signing bonus, refresh, and other cash so it matches Levels-style quotes."
+          : "No Year 2–5 signing, refresh, or other cash is set on the Compensation tab.";
 
       renderScenarioTable(state);
       $("#scenarioResults").classList.add("visible");
@@ -1435,13 +1452,15 @@
       $("#scenarioMatches").innerHTML = visible.map((scenario) => {
         const label = scenario.status === "within" ? "Within target" : scenario.status[0].toUpperCase() + scenario.status.slice(1);
         const difference = `${scenario.difference >= 0 ? "+" : ""}${compactMoney(scenario.difference)}`;
-        return `<tr><td><span class="${scenario.status === "within" ? "positive" : scenario.status === "below" ? "gap-value" : ""}">${label}</span></td><td>${compactMoney(scenario.base)}</td><td>${compactMoney(scenario.equity)}</td><td>${compactMoney(scenario.signon)}</td><td>${compactMoney(scenario.total)}</td><td>${difference}</td></tr>`;
+        return `<tr><td><span class="${scenario.status === "within" ? "positive" : scenario.status === "below" ? "gap-value" : ""}">${label}</span></td><td>${compactMoney(scenario.base)}</td><td>${compactMoney(scenario.equity)}</td><td>${compactMoney(scenario.annualizedEquity)}</td><td>${compactMoney(scenario.year1Equity)}</td><td>${compactMoney(scenario.signon)}</td><td>${compactMoney(scenario.total)}</td><td>${difference}</td></tr>`;
       }).join("");
 
       const sortLabels = {
         status: "target status",
         base: "base salary",
         equity: "equity grant",
+        annualizedEquity: "annual equity",
+        year1Equity: "Year 1 equity vest",
         signon: "signing bonus",
         total: "compensation",
         difference: "difference from target"

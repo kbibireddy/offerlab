@@ -1,7 +1,7 @@
 export const YEAR_COUNT = 5;
 export const DEFAULT_SCENARIO_LIMIT = 100_000;
 
-const METRICS = new Set(["year1", "fourYear", "fiveYear"]);
+const METRICS = new Set(["year1", "fourYear", "fiveYear", "annualized"]);
 
 function requireFiniteNonNegative(name, value) {
   if (!Number.isFinite(value) || value < 0) {
@@ -16,9 +16,22 @@ function requireYearValues(name, values) {
   values.forEach((value, index) => requireFiniteNonNegative(`${name}[${index}]`, value));
 }
 
+export function roundMoney(value) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
 export function vestingTotal(vesting) {
   requireYearValues("vesting", vesting);
   return vesting.reduce((sum, value) => sum + value, 0);
+}
+
+export function vestingYearCount(vesting) {
+  requireYearValues("vesting", vesting);
+  let lastPositiveIndex = -1;
+  vesting.forEach((value, index) => {
+    if (value > 0) lastPositiveIndex = index;
+  });
+  return lastPositiveIndex >= 0 ? lastPositiveIndex + 1 : 4;
 }
 
 export function calculateCompensationYears(input, overrides = {}) {
@@ -41,9 +54,9 @@ export function calculateCompensationYears(input, overrides = {}) {
   }
 
   return Array.from({ length: YEAR_COUNT }, (_, index) => {
-    const base = startingBase * Math.pow(1 + input.growth, index);
-    const bonus = base * input.bonusRate;
-    const stock = equityGrant * (input.vesting[index] / 100);
+    const base = roundMoney(startingBase * Math.pow(1 + input.growth, index));
+    const bonus = roundMoney(base * input.bonusRate);
+    const stock = roundMoney(equityGrant * (input.vesting[index] / 100));
     const signon = index === 0 && firstYearSigningBonus !== undefined
       ? firstYearSigningBonus
       : input.signon[index];
@@ -56,7 +69,7 @@ export function calculateCompensationYears(input, overrides = {}) {
       signon,
       refresh,
       otherCash,
-      total: base + bonus + stock + signon + refresh + otherCash
+      total: roundMoney(base + bonus + stock + signon + refresh + otherCash)
     };
   });
 }
@@ -68,15 +81,15 @@ export function summarizeCompensation(years, annualTarget = 0) {
   requireFiniteNonNegative("annualTarget", annualTarget);
   years.forEach((year, index) => requireFiniteNonNegative(`years[${index}].total`, year?.total));
 
-  const fiveYearTotal = years.reduce((sum, year) => sum + year.total, 0);
-  const fourYearTotal = years.slice(0, 4).reduce((sum, year) => sum + year.total, 0);
+  const fiveYearTotal = roundMoney(years.reduce((sum, year) => sum + year.total, 0));
+  const fourYearTotal = roundMoney(years.slice(0, 4).reduce((sum, year) => sum + year.total, 0));
   return {
     fiveYearTotal,
     fourYearTotal,
-    fiveYearAverage: fiveYearTotal / YEAR_COUNT,
-    fourYearAverage: fourYearTotal / 4,
-    fiveYearTarget: annualTarget * YEAR_COUNT,
-    fiveYearTargetGap: annualTarget * YEAR_COUNT - fiveYearTotal
+    fiveYearAverage: roundMoney(fiveYearTotal / YEAR_COUNT),
+    fourYearAverage: roundMoney(fourYearTotal / 4),
+    fiveYearTarget: roundMoney(annualTarget * YEAR_COUNT),
+    fiveYearTargetGap: roundMoney(annualTarget * YEAR_COUNT - fiveYearTotal)
   };
 }
 
@@ -87,13 +100,13 @@ export function compareToTarget(value, target, tolerance = 0) {
   if (tolerance > 1) throw new RangeError("tolerance must not exceed 1.");
 
   const margin = target * tolerance;
-  const lower = target - margin;
-  const upper = target + margin;
+  const lower = roundMoney(target - margin);
+  const upper = roundMoney(target + margin);
   return {
     lower,
     upper,
     status: value < lower ? "below" : value > upper ? "above" : "within",
-    difference: value - target
+    difference: roundMoney(value - target)
   };
 }
 
@@ -105,16 +118,45 @@ export function buildSteppedValues(min, max, step) {
   if (step === 0) throw new RangeError("step must be greater than zero.");
 
   const count = Math.floor((max - min) / step) + 1;
-  const values = Array.from({ length: count }, (_, index) => min + index * step);
-  if (values.at(-1) < max) values.push(max);
+  if (count > DEFAULT_SCENARIO_LIMIT) {
+    throw new RangeError("Step produces too many values.");
+  }
+
+  const values = Array.from({ length: count }, (_, index) => roundMoney(min + index * step));
+  if (values.length === 0 || values.at(-1) < max) values.push(max);
+  if (values.length >= 2 && values.at(-1) === values.at(-2)) values.pop();
   return values;
+}
+
+export function scenarioCarryIn(input) {
+  requireYearValues("signon", input.signon);
+  requireYearValues("refresh", input.refresh);
+  requireYearValues("otherCash", input.otherCash);
+  return {
+    laterSignon: roundMoney(input.signon.slice(1).reduce((sum, value) => sum + value, 0)),
+    refreshTotal: roundMoney(input.refresh.reduce((sum, value) => sum + value, 0)),
+    otherCashTotal: roundMoney(input.otherCash.reduce((sum, value) => sum + value, 0))
+  };
 }
 
 export function scenarioMetricValue(input, base, equity, signon, metric) {
   if (!METRICS.has(metric)) throw new RangeError(`Unsupported metric: ${metric}.`);
-  const totals = calculateCompensationYears(input, { base, equity, signon }).map((year) => year.total);
-  if (metric === "fourYear") return totals.slice(0, 4).reduce((sum, value) => sum + value, 0) / 4;
-  if (metric === "fiveYear") return totals.reduce((sum, value) => sum + value, 0) / YEAR_COUNT;
+  const years = calculateCompensationYears(input, { base, equity, signon });
+  const totals = years.map((year) => year.total);
+
+  if (metric === "fourYear") {
+    return roundMoney(totals.slice(0, 4).reduce((sum, value) => sum + value, 0) / 4);
+  }
+  if (metric === "fiveYear") {
+    return roundMoney(totals.reduce((sum, value) => sum + value, 0) / YEAR_COUNT);
+  }
+  if (metric === "annualized") {
+    // Levels.fyi-style annual TC: Year 1 base + bonus + grant / vesting years.
+    // Signing bonus, refresh, and other cash are excluded from this quote.
+    const y1 = years[0];
+    const annualEquity = equity / vestingYearCount(input.vesting);
+    return roundMoney(y1.base + y1.bonus + annualEquity);
+  }
   return totals[0];
 }
 
@@ -128,10 +170,12 @@ export function validateScenarioConfig(config, limit = DEFAULT_SCENARIO_LIMIT) {
   ];
 
   let combinationCount = 1;
+  let failedDimension = false;
   dimensions.forEach(([name, min, max, step]) => {
     try {
       combinationCount *= buildSteppedValues(min, max, step).length;
     } catch (error) {
+      failedDimension = true;
       errors.push(`${name}: ${error.message}`);
     }
   });
@@ -139,10 +183,10 @@ export function validateScenarioConfig(config, limit = DEFAULT_SCENARIO_LIMIT) {
   if (!Number.isFinite(config.tolerance) || config.tolerance < 0 || config.tolerance > 1) {
     errors.push("Tolerance must be between 0 and 1.");
   }
-  if (combinationCount > limit) {
+  if (!failedDimension && combinationCount > limit) {
     errors.push(`This range creates ${combinationCount.toLocaleString()} combinations; the limit is ${limit.toLocaleString()}.`);
   }
-  return { valid: errors.length === 0, errors, combinationCount };
+  return { valid: errors.length === 0, errors, combinationCount: failedDimension ? 0 : combinationCount };
 }
 
 export function generateScenarios(input, config, limit = DEFAULT_SCENARIO_LIMIT) {
@@ -155,6 +199,8 @@ export function generateScenarios(input, config, limit = DEFAULT_SCENARIO_LIMIT)
   const bases = buildSteppedValues(config.baseMin, config.baseMax, config.baseStep);
   const equities = buildSteppedValues(config.equityMin, config.equityMax, config.equityStep);
   const signons = buildSteppedValues(config.signonMin, config.signonMax, config.signonStep);
+  const carryIn = scenarioCarryIn(input);
+  const vestYears = vestingYearCount(input.vesting);
   const scenarios = [];
 
   for (const base of bases) {
@@ -167,8 +213,11 @@ export function generateScenarios(input, config, limit = DEFAULT_SCENARIO_LIMIT)
           equity,
           signon,
           total,
+          year1Equity: roundMoney(equity * (input.vesting[0] / 100)),
+          annualizedEquity: roundMoney(equity / vestYears),
           status: comparison.status,
-          difference: comparison.difference
+          difference: comparison.difference,
+          carryIn
         });
       }
     }

@@ -5,12 +5,16 @@ import {
   buildSteppedValues,
   calculateCompensationYears,
   compareToTarget,
+  DEFAULT_SCENARIO_LIMIT,
   generateScenarios,
+  roundMoney,
+  scenarioCarryIn,
   scenarioExtent,
   scenarioMetricValue,
   summarizeCompensation,
   validateScenarioConfig,
-  vestingTotal
+  vestingTotal,
+  vestingYearCount
 } from "./calculator.js";
 
 const input = (overrides = {}) => ({
@@ -55,6 +59,15 @@ describe("vestingTotal", () => {
   });
 });
 
+describe("vestingYearCount", () => {
+  it("uses the last year with a positive vest share", () => {
+    expect(vestingYearCount([25, 25, 25, 25, 0])).toBe(4);
+    expect(vestingYearCount([10, 10, 40, 40, 0])).toBe(4);
+    expect(vestingYearCount([20, 20, 20, 20, 20])).toBe(5);
+    expect(vestingYearCount([0, 0, 0, 0, 0])).toBe(4);
+  });
+});
+
 describe("calculateCompensationYears", () => {
   it("calculates every component with compound salary growth", () => {
     const years = calculateCompensationYears(input());
@@ -74,6 +87,24 @@ describe("calculateCompensationYears", () => {
     expect(years[1].total).toBeCloseTo(446_900);
     expect(years[4].stock).toBe(0);
     expect(years[4].refresh).toBe(40_000);
+  });
+
+  it("applies cliff vesting to Year 1 stock, not the full grant", () => {
+    const years = calculateCompensationYears(input({
+      base: 180_000,
+      growth: 0,
+      bonusRate: 32_000 / 180_000,
+      stockGrant: 600_000,
+      vesting: [10, 10, 40, 40, 0],
+      signon: [128_000, 0, 0, 0, 0],
+      refresh: [0, 0, 0, 0, 0],
+      otherCash: [0, 0, 0, 0, 0]
+    }));
+
+    expect(years[0].stock).toBe(60_000);
+    expect(years[0].total).toBe(400_000);
+    expect(years[1].stock).toBe(60_000);
+    expect(years[2].stock).toBe(240_000);
   });
 
   it("applies scenario overrides only where intended", () => {
@@ -178,6 +209,7 @@ describe("buildSteppedValues", () => {
     expect(() => buildSteppedValues(2, 1, 1)).toThrow("max");
     expect(() => buildSteppedValues(0, 1, 0)).toThrow("greater than zero");
     expect(() => buildSteppedValues(-1, 1, 1)).toThrow("min");
+    expect(() => buildSteppedValues(0, DEFAULT_SCENARIO_LIMIT + 1, 1)).toThrow("too many values");
   });
 
   it("is monotonic, bounded, and includes both endpoints", () => {
@@ -204,10 +236,34 @@ describe("scenario metrics and generation", () => {
 
     expect(scenarioMetricValue(source, 200_000, 800_000, 100_000, "year1")).toBe(years[0].total);
     expect(scenarioMetricValue(source, 200_000, 800_000, 100_000, "fourYear"))
-      .toBe(years.slice(0, 4).reduce((sum, year) => sum + year.total, 0) / 4);
+      .toBe(roundMoney(years.slice(0, 4).reduce((sum, year) => sum + year.total, 0) / 4));
     expect(scenarioMetricValue(source, 200_000, 800_000, 100_000, "fiveYear"))
-      .toBe(years.reduce((sum, year) => sum + year.total, 0) / 5);
+      .toBe(roundMoney(years.reduce((sum, year) => sum + year.total, 0) / 5));
+    expect(scenarioMetricValue(source, 200_000, 800_000, 100_000, "annualized"))
+      .toBe(200_000 + 30_000 + 200_000);
     expect(() => scenarioMetricValue(source, 1, 1, 1, "median")).toThrow("Unsupported metric");
+  });
+
+  it("uses Levels-style annualized TC and ignores signing bonus", () => {
+    const source = input({
+      growth: 0,
+      bonusRate: 32_000 / 180_000,
+      vesting: [10, 10, 40, 40, 0],
+      signon: [128_000, 50_000, 0, 0, 0],
+      refresh: [0, 25_000, 0, 0, 0],
+      otherCash: [5_000, 0, 0, 0, 0]
+    });
+
+    expect(scenarioMetricValue(source, 180_000, 600_000, 128_000, "annualized")).toBe(362_000);
+    expect(scenarioMetricValue(source, 180_000, 600_000, 128_000, "year1")).toBe(405_000);
+  });
+
+  it("reports carry-in that affects multi-year averages", () => {
+    expect(scenarioCarryIn(input())).toEqual({
+      laterSignon: 0,
+      refreshTotal: 100_000,
+      otherCashTotal: 5_000
+    });
   });
 
   it("validates grids and computes the exact inclusive combination count", () => {
@@ -226,6 +282,7 @@ describe("scenario metrics and generation", () => {
     }));
     expect(invalid.valid).toBe(false);
     expect(invalid.errors).toHaveLength(4);
+    expect(invalid.combinationCount).toBe(0);
   });
 
   it("enforces the configured scenario limit", () => {
@@ -241,7 +298,9 @@ describe("scenario metrics and generation", () => {
     expect(scenarios[0]).toMatchObject({
       base: 180_000,
       equity: 600_000,
-      signon: 50_000
+      signon: 50_000,
+      year1Equity: 150_000,
+      annualizedEquity: 150_000
     });
     scenarios.forEach((scenario) => {
       expect(scenario.total).toBe(scenarioMetricValue(
@@ -339,7 +398,7 @@ describe("calculation invariants", () => {
         calculateCompensationYears(source).forEach((year) => {
           expect(year.total).toBeCloseTo(
             year.base + year.bonus + year.stock + year.signon + year.refresh + year.otherCash,
-            8
+            2
           );
           expect(year.total).toBeGreaterThanOrEqual(0);
         });
@@ -355,7 +414,7 @@ describe("calculation invariants", () => {
         const sum = shares.reduce((total, value) => total + value, 0);
         const vesting = [...shares, 100 - sum];
         const years = calculateCompensationYears(input({ stockGrant: grant, vesting }));
-        expect(years.reduce((total, year) => total + year.stock, 0)).toBeCloseTo(grant, 8);
+        expect(years.reduce((total, year) => total + year.stock, 0)).toBeCloseTo(grant, 2);
       }
     ));
   });
