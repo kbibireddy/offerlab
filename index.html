@@ -998,7 +998,17 @@
     <footer>Figures are gross nominal estimates. Stock-price changes, taxes, inflation, and probability of payment are not modeled. Bonus assumes 100% target payout; equity and other payments may depend on plan and employment terms.</footer>
   </main>
 
-  <script>
+  <script type="module">
+    import {
+      buildHistogramBins,
+      calculateCompensationYears,
+      generateScenarios,
+      scenarioExtent,
+      summarizeCompensation,
+      validateScenarioConfig,
+      vestingTotal
+    } from "./src/calculator.js";
+
     const defaults = {
       currency: "USD",
       base: 200000,
@@ -1053,33 +1063,21 @@
       };
     }
 
-    function compensationYears(input, overrides = {}) {
-      const startingBase = overrides.base ?? input.base;
-      const equityGrant = overrides.equity ?? input.stockGrant;
-      return Array.from({ length: 5 }, (_, index) => {
-        const base = startingBase * Math.pow(1 + input.growth, index);
-        const bonus = base * input.bonusRate;
-        const stock = equityGrant * (input.vesting[index] / 100);
-        const signon = index === 0 && overrides.signon !== undefined ? overrides.signon : input.signon[index];
-        const refresh = input.refresh[index];
-        const otherCash = input.otherCash[index];
-        return { base, bonus, stock, signon, refresh, otherCash, total: base + bonus + stock + signon + refresh + otherCash };
-      });
-    }
-
     function calculate() {
       const input = values();
-      const years = compensationYears(input);
+      const years = calculateCompensationYears(input);
       render(input, years);
     }
 
     function render(input, years) {
-      const fiveYearTotal = years.reduce((sum, year) => sum + year.total, 0);
-      const fourYearTotal = years.slice(0, 4).reduce((sum, year) => sum + year.total, 0);
-      const average = fiveYearTotal / 5;
-      const targetTotal = input.target * 5;
-      const gap = targetTotal - fiveYearTotal;
-      const vestingTotal = input.vesting.reduce((sum, value) => sum + value, 0);
+      const summary = summarizeCompensation(years, input.target);
+      const {
+        fiveYearTotal,
+        fourYearAverage,
+        fiveYearAverage: average,
+        fiveYearTargetGap: gap
+      } = summary;
+      const totalVesting = vestingTotal(input.vesting);
 
       $("#currencyHelper").textContent = `Amounts are displayed in ${input.currency}. Changing this setting does not convert values.`;
       updateSliders();
@@ -1087,17 +1085,17 @@
       $("#fiveYearTotal").textContent = compactMoney(fiveYearTotal);
       $("#yearOneTotal").textContent = compactMoney(years[0].total);
       $("#averageTotal").textContent = compactMoney(average);
-      $("#fourYearAverage").textContent = `Four-year average: ${compactMoney(fourYearTotal / 4)}`;
-      const vestingMessage = vestingTotal > 100
+      $("#fourYearAverage").textContent = `Four-year average: ${compactMoney(fourYearAverage)}`;
+      const vestingMessage = totalVesting > 100
         ? " — invalid; total cannot exceed 100%"
-        : vestingTotal < 100
-          ? ` — ${100 - vestingTotal}% vests after Year 5 or remains unallocated`
+        : totalVesting < 100
+          ? ` — ${100 - totalVesting}% vests after Year 5 or remains unallocated`
           : "";
-      $("#vestingTotal").textContent = `Vesting schedule total: ${vestingTotal}%${vestingMessage}`;
-      $("#vestingTotal").style.color = vestingTotal > 100 ? "var(--danger)" : "var(--muted)";
+      $("#vestingTotal").textContent = `Vesting schedule total: ${totalVesting}%${vestingMessage}`;
+      $("#vestingTotal").style.color = totalVesting > 100 ? "var(--danger)" : "var(--muted)";
 
       const gapElement = $("#fiveYearTargetGap");
-      if (vestingTotal > 100) {
+      if (totalVesting > 100) {
         $("#fiveYearTotal").textContent = "—";
         $("#yearOneTotal").textContent = "—";
         $("#averageTotal").textContent = "—";
@@ -1206,20 +1204,6 @@
       });
     }
 
-    function steppedValues(min, max, step) {
-      const count = Math.floor((max - min) / step) + 1;
-      const result = Array.from({ length: count }, (_, index) => Math.round(min + index * step));
-      if (result[result.length - 1] < max) result.push(max);
-      return result;
-    }
-
-    function scenarioMetricValue(input, base, equity, signon, metric) {
-      const totals = compensationYears(input, { base, equity, signon }).map((year) => year.total);
-      if (metric === "fourYear") return totals.slice(0, 4).reduce((sum, value) => sum + value, 0) / 4;
-      if (metric === "fiveYear") return totals.reduce((sum, value) => sum + value, 0) / 5;
-      return totals[0];
-    }
-
     function runScenarioExplorer() {
       const input = values();
       const config = {
@@ -1238,45 +1222,21 @@
       const error = $("#scenarioError");
       error.textContent = "";
 
-      const vestingTotal = input.vesting.reduce((sum, value) => sum + value, 0);
-      if (vestingTotal > 100) {
+      if (vestingTotal(input.vesting) > 100) {
         error.textContent = "The vesting schedule exceeds 100%. Correct it before running scenarios.";
         $("#scenarioResults").classList.remove("visible");
         return;
       }
-      if (config.baseMax < config.baseMin || config.equityMax < config.equityMin || config.signonMax < config.signonMin) {
-        error.textContent = "Each maximum must be greater than or equal to its minimum.";
-        $("#scenarioResults").classList.remove("visible");
-        return;
-      }
-      if (!config.baseStep || !config.equityStep || !config.signonStep) {
-        error.textContent = "Every increment must be greater than zero.";
-        $("#scenarioResults").classList.remove("visible");
-        return;
-      }
-
-      const bases = steppedValues(config.baseMin, config.baseMax, config.baseStep);
-      const equities = steppedValues(config.equityMin, config.equityMax, config.equityStep);
-      const signons = steppedValues(config.signonMin, config.signonMax, config.signonStep);
-      const combinationCount = bases.length * equities.length * signons.length;
-      if (combinationCount > 100000) {
-        error.textContent = `This range creates ${combinationCount.toLocaleString()} combinations. Increase one or more increments to remain below 100,000.`;
+      const validation = validateScenarioConfig(config);
+      if (!validation.valid) {
+        error.textContent = validation.errors.join(" ");
         $("#scenarioResults").classList.remove("visible");
         return;
       }
 
       const lower = input.target * (1 - config.tolerance);
       const upper = input.target * (1 + config.tolerance);
-      const scenarios = [];
-      for (const base of bases) {
-        for (const equity of equities) {
-          for (const signon of signons) {
-            const total = scenarioMetricValue(input, base, equity, signon, config.metric);
-            const status = total < lower ? "below" : total > upper ? "above" : "within";
-            scenarios.push({ base, equity, signon, total, status, difference: total - input.target });
-          }
-        }
-      }
+      const scenarios = generateScenarios(input, config);
 
       scenarioView.sortKey = "closeness";
       scenarioView.sortDirection = "asc";
@@ -1374,16 +1334,6 @@
       return { context, width, height };
     }
 
-    function scenarioExtent(scenarios, key) {
-      let min = Infinity;
-      let max = -Infinity;
-      scenarios.forEach((scenario) => {
-        min = Math.min(min, scenario[key]);
-        max = Math.max(max, scenario[key]);
-      });
-      return { min, max };
-    }
-
     function drawScenarioScatter(state) {
       const canvas = $("#scenarioScatter");
       const { context, width, height } = canvasContext(canvas);
@@ -1441,17 +1391,9 @@
       const padding = { top: 12, right: 12, bottom: 34, left: 42 };
       const plotWidth = width - padding.left - padding.right;
       const plotHeight = height - padding.top - padding.bottom;
-      const totalExtent = scenarioExtent(state.scenarios, "total");
-      const min = totalExtent.min;
-      const max = totalExtent.max;
-      const binCount = max === min ? 1 : 24;
-      const binWidth = max === min ? 1 : (max - min) / binCount;
-      const bins = Array.from({ length: binCount }, () => ({ below: 0, within: 0, above: 0, total: 0 }));
-      state.scenarios.forEach((scenario) => {
-        const index = Math.min(binCount - 1, Math.floor((scenario.total - min) / binWidth));
-        bins[index][scenario.status]++;
-        bins[index].total++;
-      });
+      const histogram = buildHistogramBins(state.scenarios);
+      const { min, max, binWidth, bins } = histogram;
+      const binCount = bins.length;
       const largest = Math.max(...bins.map((bin) => bin.total), 1);
       const barWidth = plotWidth / binCount;
       histogramGeometry = { min, max, binWidth, binCount, padding, barWidth, plotWidth };
