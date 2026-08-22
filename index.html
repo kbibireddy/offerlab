@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Interactive multi-year compensation calculator">
-  <meta name="theme-color" content="#f4f1e9">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#174f3d">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Compensation Planner</title>
   <style>
     :root {
@@ -42,19 +42,20 @@
     html {
       width: 100%;
       max-width: 100%;
-      background: var(--paper);
+      overflow-x: hidden;
+      background: var(--green);
     }
 
     body {
       width: 100%;
       max-width: 100%;
       margin: 0;
-      overflow-x: clip;
+      overflow-x: hidden;
       color: var(--ink);
       background:
-        radial-gradient(circle at 8% 0%, rgba(216, 243, 107, 0.24), transparent 28rem),
+        radial-gradient(circle at 8% 12%, rgba(216, 243, 107, 0.24), transparent 28rem),
         var(--paper);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Source Sans 3", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
       line-height: 1.45;
     }
 
@@ -65,15 +66,23 @@
       width: 100%;
       max-width: 1440px;
       margin: 0 auto;
-      padding: max(16px, env(safe-area-inset-top)) 16px max(48px, env(safe-area-inset-bottom));
+      padding: 0 16px max(48px, env(safe-area-inset-bottom));
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 -16px 18px;
+      padding: max(14px, env(safe-area-inset-top)) 16px 14px;
+      color: white;
+      background: var(--green);
+      box-shadow: 0 10px 28px rgba(23, 79, 61, .18);
     }
 
     header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 24px;
-      margin-bottom: 26px;
+      display: block;
+      margin-bottom: 18px;
     }
 
     .brand {
@@ -84,25 +93,31 @@
       letter-spacing: -0.03em;
     }
 
+    .top-bar .brand {
+      color: white;
+      font-size: 1.05rem;
+    }
+
     .mark {
       display: grid;
       width: 42px;
       height: 42px;
       place-items: center;
       border-radius: 13px;
-      color: white;
-      background: var(--green);
-      box-shadow: var(--shadow);
+      color: var(--green);
+      background: var(--lime);
+      box-shadow: none;
+      font-weight: 900;
     }
 
     h1 {
       max-width: 760px;
-      margin: 30px 0 8px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2.5rem, 6vw, 5.7rem);
+      margin: 0 0 8px;
+      font-family: "Fraunces", Georgia, "Times New Roman", serif;
+      font-size: clamp(2.1rem, 5.5vw, 4.8rem);
       font-weight: 500;
       letter-spacing: -0.055em;
-      line-height: 0.94;
+      line-height: 0.96;
     }
 
     .intro {
@@ -114,13 +129,14 @@
 
     .reset {
       flex: 0 0 auto;
-      margin-top: 8px;
+      margin: 0;
       padding: 10px 14px;
       border: 1px solid var(--line);
       border-radius: 999px;
       color: var(--ink);
-      background: rgba(255,255,255,.55);
+      background: rgba(255,255,255,.9);
       font-weight: 700;
+      white-space: nowrap;
     }
 
     .reset:hover { background: white; }
@@ -135,7 +151,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 22px;
       padding: 8px;
       border: 1px solid var(--line);
@@ -147,7 +163,8 @@
     .workspace-switch {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      flex: 1 1 360px;
+      flex: 1 1 auto;
+      min-width: 0;
       max-width: 520px;
       padding: 4px;
       border-radius: 11px;
@@ -155,8 +172,9 @@
     }
 
     .workspace-switch button {
+      min-width: 0;
       min-height: 40px;
-      padding: 8px 12px;
+      padding: 8px 10px;
       border: 0;
       border-radius: 8px;
       color: var(--muted);
@@ -173,7 +191,8 @@
     .layout {
       display: grid;
       min-width: 0;
-      grid-template-columns: minmax(310px, 0.72fr) minmax(560px, 1.55fr);
+      width: 100%;
+      grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.55fr);
       gap: 22px;
       align-items: start;
     }
@@ -253,9 +272,14 @@
 
     label {
       display: block;
+      padding-right: 7.5rem;
       color: var(--muted);
       font-size: .76rem;
       font-weight: 750;
+    }
+
+    label:has(select) {
+      padding-right: 0;
     }
 
     .input-wrap {
@@ -343,7 +367,8 @@
       position: absolute;
       top: -7px;
       right: 0;
-      width: 104px;
+      width: min(9.5rem, 42vw);
+      min-width: 5.5rem;
       height: 30px;
       padding: 4px 8px;
       border: 1px solid transparent;
@@ -354,6 +379,7 @@
       font-weight: 850;
       text-align: right;
       appearance: textfield;
+      z-index: 1;
     }
 
     .slider-number-input:hover,
@@ -384,11 +410,14 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
       gap: 12px;
+      width: 100%;
+      min-width: 0;
     }
 
     .metric {
+      min-width: 0;
       min-height: 142px;
       padding: 20px;
       overflow: hidden;
@@ -604,8 +633,10 @@
 
     .scenario-config {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
+      width: 100%;
+      min-width: 0;
     }
 
     .range-card {
@@ -794,53 +825,139 @@
     }
 
     @media (max-width: 960px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: minmax(0, 1fr); }
       .controls { position: static; }
+      .scenario-config { grid-template-columns: minmax(0, 1fr); }
     }
 
-    @media (max-width: 650px) {
+    @media (max-width: 720px) {
       .shell {
         width: 100%;
         max-width: 100%;
-        padding: max(10px, env(safe-area-inset-top)) 10px max(30px, env(safe-area-inset-bottom));
+        padding: 0 10px max(30px, env(safe-area-inset-bottom));
       }
-      header { display: block; }
-      h1 { margin-top: 20px; }
-      .summary-grid { grid-template-columns: 1fr; }
-      .metric.primary { grid-column: auto; }
-      .fields { grid-template-columns: 1fr; }
-      .year-inputs { grid-template-columns: 1fr; }
+
+      .top-bar {
+        margin: 0 -10px 12px;
+        padding: max(12px, env(safe-area-inset-top)) 12px 12px;
+      }
+
+      header { margin-bottom: 12px; }
+      h1 {
+        margin: 0 0 6px;
+        font-size: clamp(1.55rem, 7vw, 2.1rem);
+        line-height: 1.05;
+      }
+      .intro { font-size: .92rem; }
+
+      .top-kpis,
+      .summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .metric {
+        min-height: 0;
+        padding: 12px 10px;
+      }
+
+      .metric .label {
+        display: block;
+        font-size: .68rem;
+        line-height: 1.25;
+      }
+
+      .metric .label span {
+        display: block;
+        margin-top: 2px;
+        opacity: .8;
+      }
+
+      .metric .value {
+        margin-top: 10px;
+        font-size: clamp(1.05rem, 4.6vw, 1.35rem);
+        letter-spacing: -.04em;
+      }
+
+      .metric .sub {
+        margin-top: 6px;
+        font-size: .65rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .workspace-toolbar {
+        align-items: center;
+        flex-direction: row;
+        gap: 8px;
+        padding: 6px;
+      }
+
+      .workspace-switch {
+        width: auto;
+        max-width: none;
+        flex: 1 1 auto;
+      }
+
+      .workspace-switch button {
+        min-height: 38px;
+        padding: 8px 6px;
+        font-size: .82rem;
+      }
+
+      .reset {
+        width: auto;
+        flex: 0 0 auto;
+        margin-top: 0;
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: .78rem;
+      }
+
+      .fields,
+      .year-inputs { grid-template-columns: minmax(0, 1fr); }
       .chart-panel, .table-panel, .insight-panel, .controls { padding: 17px; }
-      .insight-panel { grid-template-columns: 1fr; }
+      .insight-panel { grid-template-columns: minmax(0, 1fr); }
       .panel-head { display: block; }
       .legend { margin-top: 10px; }
       .scenario-explorer { padding: 17px; }
       .scenario-header { display: block; }
-      .scenario-config, .scenario-charts { grid-template-columns: 1fr; }
-      .scenario-options { grid-template-columns: 1fr; }
-      .scenario-summary { grid-template-columns: 1fr 1fr; }
+      .scenario-charts { grid-template-columns: minmax(0, 1fr); }
+      .scenario-options { grid-template-columns: minmax(0, 1fr); }
+      .scenario-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .start-button { width: 100%; }
-      .scenario-results, .scenario-config, .scenario-charts, .scenario-chart, .table-scroll { width: 100%; min-width: 0; max-width: 100%; }
-      .table-actions { align-items: flex-start; flex-direction: column; }
-      .workspace-toolbar { align-items: stretch; flex-direction: column; }
-      .workspace-switch { width: 100%; max-width: none; flex-basis: auto; }
-      .reset { width: 100%; margin-top: 0; min-height: 42px; }
-      .panel, .layout, .results, .summary-grid, .metric, .chart-panel, .table-panel, .insight-panel {
+      .scenario-results, .scenario-config, .scenario-charts, .scenario-chart, .table-scroll {
         width: 100%;
         min-width: 0;
         max-width: 100%;
       }
+      .table-actions { align-items: flex-start; flex-direction: column; }
+      .panel, .layout, .results, .summary-grid, .metric, .chart-panel, .table-panel, .insight-panel, .workspace-toolbar {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .slider-number-input {
+        width: min(8.5rem, 38vw);
+      }
     }
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@450;600;750;850&display=swap" rel="stylesheet">
 </head>
 <body>
   <main class="shell">
+    <div class="top-bar">
+      <div class="brand"><span class="mark">CP</span> Compensation Planner</div>
+    </div>
     <header>
-      <div>
-        <div class="brand"><span class="mark">CP</span> Compensation Planner</div>
-        <h1>Model compensation across multiple years.</h1>
-        <p class="intro" id="intro">Adjust compensation components and assumptions to understand how total compensation changes over five years.</p>
-      </div>
+      <h1>Model compensation across multiple years.</h1>
+      <p class="intro" id="intro">Adjust compensation components and assumptions to understand how total compensation changes over five years.</p>
     </header>
 
     <div class="summary-grid top-kpis" aria-live="polite">
@@ -855,7 +972,7 @@
         <div class="sub">Includes all Year 1 components</div>
       </article>
       <article class="panel metric">
-        <div class="label">Average annual compensation</div>
+        <div class="label">Average annual</div>
         <div class="value" id="averageTotal">—</div>
         <div class="sub" id="fourYearAverage">Four-year average: —</div>
       </article>
@@ -866,7 +983,7 @@
         <button class="active" id="compensationTab" data-workspace="compensation" role="tab" aria-selected="true" aria-controls="compensationWorkspace" type="button">Compensation</button>
         <button id="simulationTab" data-workspace="simulation" role="tab" aria-selected="false" aria-controls="simulationWorkspace" type="button">Simulation</button>
       </div>
-      <button class="reset" id="resetButton" type="button">Reset numbers</button>
+      <button class="reset" id="resetButton" type="button" aria-label="Reset numbers">Reset</button>
     </nav>
 
     <div class="layout" id="compensationWorkspace" role="tabpanel" aria-labelledby="compensationTab">
