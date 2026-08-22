@@ -7,7 +7,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      include: ["src/calculator.js"],
+      include: ["src/calculator.js", "src/form.js"],
       thresholds: {
         lines: 98,
         functions: 100,
