@@ -5,6 +5,9 @@ An interactive calculator for modeling and comparing multi-year compensation sce
 ## Features
 
 - Slider controls for every compensation input
+- Click-to-edit exact values alongside every slider
+- Collapsible parameter groups optimized for mobile screens
+- Separate compensation and simulation workspaces that preserve shared values
 - Configurable currency
 - Base salary growth and target bonus calculations
 - Custom stock vesting schedules

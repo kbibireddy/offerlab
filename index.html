@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Interactive multi-year compensation calculator">
+  <meta name="theme-color" content="#f4f1e9">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Compensation Planner</title>
   <style>
     :root {
@@ -37,8 +39,17 @@
       border: 0;
     }
 
+    html {
+      width: 100%;
+      max-width: 100%;
+      background: var(--paper);
+    }
+
     body {
+      width: 100%;
+      max-width: 100%;
       margin: 0;
+      overflow-x: clip;
       color: var(--ink);
       background:
         radial-gradient(circle at 8% 0%, rgba(216, 243, 107, 0.24), transparent 28rem),
@@ -51,9 +62,10 @@
     button { cursor: pointer; }
 
     .shell {
-      width: min(1440px, calc(100% - 32px));
+      width: 100%;
+      max-width: 1440px;
       margin: 0 auto;
-      padding: 26px 0 48px;
+      padding: max(16px, env(safe-area-inset-top)) 16px max(48px, env(safe-area-inset-bottom));
     }
 
     header {
@@ -113,6 +125,51 @@
 
     .reset:hover { background: white; }
 
+    [hidden] { display: none !important; }
+
+    .top-kpis {
+      margin-bottom: 14px;
+    }
+
+    .workspace-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 253, 248, .82);
+      box-shadow: var(--shadow);
+    }
+
+    .workspace-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1 1 360px;
+      max-width: 520px;
+      padding: 4px;
+      border-radius: 11px;
+      background: #e8e9e1;
+    }
+
+    .workspace-switch button {
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 800;
+    }
+
+    .workspace-switch button.active {
+      color: white;
+      background: var(--green);
+      box-shadow: 0 3px 10px rgba(23, 79, 61, .18);
+    }
+
     .layout {
       display: grid;
       min-width: 0;
@@ -159,6 +216,33 @@
     }
 
     .section:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    details.section > summary,
+    details.range-card > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    details.section > summary::-webkit-details-marker,
+    details.range-card > summary::-webkit-details-marker { display: none; }
+
+    details.section > summary::after,
+    details.range-card > summary::after {
+      color: var(--green-2);
+      content: "＋";
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    details[open].section > summary::after,
+    details[open].range-card > summary::after { content: "−"; }
+
+    details.section[open] > summary,
+    details.range-card[open] > summary { margin-bottom: 12px; }
 
     .fields {
       display: grid;
@@ -254,6 +338,34 @@
       font-size: .75rem;
       font-weight: 850;
     }
+
+    .slider-number-input {
+      position: absolute;
+      top: -7px;
+      right: 0;
+      width: 104px;
+      height: 30px;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      color: var(--ink);
+      background: transparent;
+      font-size: .75rem;
+      font-weight: 850;
+      text-align: right;
+      appearance: textfield;
+    }
+
+    .slider-number-input:hover,
+    .slider-number-input:focus {
+      border-color: var(--line);
+      outline: none;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(38, 118, 91, .1);
+    }
+
+    .slider-number-input::-webkit-inner-spin-button,
+    .slider-number-input::-webkit-outer-spin-button { margin: 0; appearance: none; }
 
     .year-inputs {
       display: grid;
@@ -503,7 +615,7 @@
       background: #faf9f3;
     }
 
-    .range-card h3 { margin-bottom: 14px; }
+    .range-card > summary h3 { margin: 0; }
     .range-card label { margin-top: 13px; }
     .range-card label:first-of-type { margin-top: 0; }
 
@@ -687,12 +799,15 @@
     }
 
     @media (max-width: 650px) {
-      .shell { width: min(100% - 20px, 1440px); padding-top: 16px; }
+      .shell {
+        width: 100%;
+        max-width: 100%;
+        padding: max(10px, env(safe-area-inset-top)) 10px max(30px, env(safe-area-inset-bottom));
+      }
       header { display: block; }
-      .reset { margin-top: 18px; }
-      h1 { margin-top: 24px; }
-      .summary-grid { grid-template-columns: 1fr 1fr; }
-      .metric.primary { grid-column: 1 / -1; }
+      h1 { margin-top: 20px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .metric.primary { grid-column: auto; }
       .fields { grid-template-columns: 1fr; }
       .year-inputs { grid-template-columns: 1fr; }
       .chart-panel, .table-panel, .insight-panel, .controls { padding: 17px; }
@@ -707,6 +822,14 @@
       .start-button { width: 100%; }
       .scenario-results, .scenario-config, .scenario-charts, .scenario-chart, .table-scroll { width: 100%; min-width: 0; max-width: 100%; }
       .table-actions { align-items: flex-start; flex-direction: column; }
+      .workspace-toolbar { align-items: stretch; flex-direction: column; }
+      .workspace-switch { width: 100%; max-width: none; flex-basis: auto; }
+      .reset { width: 100%; margin-top: 0; min-height: 42px; }
+      .panel, .layout, .results, .summary-grid, .metric, .chart-panel, .table-panel, .insight-panel {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
     }
   </style>
 </head>
@@ -718,17 +841,42 @@
         <h1>Model compensation across multiple years.</h1>
         <p class="intro" id="intro">Adjust compensation components and assumptions to understand how total compensation changes over five years.</p>
       </div>
-      <button class="reset" id="resetButton" type="button">Reset inputs</button>
     </header>
 
-    <div class="layout">
+    <div class="summary-grid top-kpis" aria-live="polite">
+      <article class="panel metric primary">
+        <div class="label">Total compensation <span>Years 1–5</span></div>
+        <div class="value" id="fiveYearTotal">—</div>
+        <div class="sub" id="fiveYearTargetGap">Compared with your five-year target</div>
+      </article>
+      <article class="panel metric">
+        <div class="label">Year 1 compensation</div>
+        <div class="value" id="yearOneTotal">—</div>
+        <div class="sub">Includes all Year 1 components</div>
+      </article>
+      <article class="panel metric">
+        <div class="label">Average annual compensation</div>
+        <div class="value" id="averageTotal">—</div>
+        <div class="sub" id="fourYearAverage">Four-year average: —</div>
+      </article>
+    </div>
+
+    <nav class="workspace-toolbar" aria-label="Calculator workspace">
+      <div class="workspace-switch" role="tablist" aria-label="Choose calculator mode">
+        <button class="active" id="compensationTab" data-workspace="compensation" role="tab" aria-selected="true" aria-controls="compensationWorkspace" type="button">Compensation</button>
+        <button id="simulationTab" data-workspace="simulation" role="tab" aria-selected="false" aria-controls="simulationWorkspace" type="button">Simulation</button>
+      </div>
+      <button class="reset" id="resetButton" type="button">Reset numbers</button>
+    </nav>
+
+    <div class="layout" id="compensationWorkspace" role="tabpanel" aria-labelledby="compensationTab">
       <aside class="panel controls">
         <p class="eyebrow">Compensation inputs</p>
         <h2>Set your assumptions</h2>
         <p class="helper" id="currencyHelper">Amounts are displayed in USD. No currency conversion is performed.</p>
 
-        <section class="section">
-          <h3>Calculator settings</h3>
+        <details class="section">
+          <summary><h3>Calculator settings</h3></summary>
           <div class="fields">
             <label>Currency
               <div class="input-wrap">
@@ -745,10 +893,10 @@
               </div>
             </label>
           </div>
-        </section>
+        </details>
 
-        <section class="section">
-          <h3>Recurring cash</h3>
+        <details class="section" open>
+          <summary><h3>Recurring cash</h3></summary>
           <div class="fields">
             <label>Base salary — Year 1
               <div class="input-wrap"><input id="base" type="range" min="0" max="500000" step="1000" value="200000"></div>
@@ -763,10 +911,10 @@
               <div class="input-wrap"><input id="target" type="range" min="0" max="2000000" step="10000" value="500000"></div>
             </label>
           </div>
-        </section>
+        </details>
 
-        <section class="section">
-          <h3>Initial equity grant</h3>
+        <details class="section" open>
+          <summary><h3>Initial equity grant</h3></summary>
           <p class="helper">Annual vested value is calculated from the grant value and vesting schedule.</p>
           <div class="fields">
             <label>Initial equity grant value
@@ -781,10 +929,10 @@
             <label>Year 5 vesting share<input class="percent vesting" type="range" min="0" max="100" step="1" value="0"></label>
           </div>
           <p class="helper" id="vestingTotal">Vesting schedule total: 100%</p>
-        </section>
+        </details>
 
-        <section class="section">
-          <h3>Signing bonus by year</h3>
+        <details class="section">
+          <summary><h3>Signing bonus by year</h3></summary>
           <div class="year-inputs" id="signonInputs">
             <label class="money">Year 1<input class="signon" type="range" min="0" max="1000000" step="1000" value="100000"></label>
             <label class="money">Year 2<input class="signon" type="range" min="0" max="1000000" step="1000" value="0"></label>
@@ -792,10 +940,10 @@
             <label class="money">Year 4<input class="signon" type="range" min="0" max="1000000" step="1000" value="0"></label>
             <label class="money">Year 5<input class="signon" type="range" min="0" max="1000000" step="1000" value="0"></label>
           </div>
-        </section>
+        </details>
 
-        <section class="section">
-          <h3>Expected refresh equity vesting</h3>
+        <details class="section">
+          <summary><h3>Expected refresh equity vesting</h3></summary>
           <p class="helper">Enter the estimated refresh equity value vesting in each year.</p>
           <div class="year-inputs" id="refreshInputs">
             <label class="money">Year 1<input class="refresh" type="range" min="0" max="1000000" step="1000" value="0"></label>
@@ -804,10 +952,10 @@
             <label class="money">Year 4<input class="refresh" type="range" min="0" max="1000000" step="1000" value="0"></label>
             <label class="money">Year 5<input class="refresh" type="range" min="0" max="1000000" step="1000" value="0"></label>
           </div>
-        </section>
+        </details>
 
-        <section class="section">
-          <h3>Other cash by year</h3>
+        <details class="section">
+          <summary><h3>Other cash by year</h3></summary>
           <p class="helper">Optional: relocation, retention, allowances, or guaranteed cash.</p>
           <div class="year-inputs" id="otherCashInputs">
             <label class="money">Year 1<input class="other-cash" type="range" min="0" max="1000000" step="1000" value="0"></label>
@@ -816,28 +964,10 @@
             <label class="money">Year 4<input class="other-cash" type="range" min="0" max="1000000" step="1000" value="0"></label>
             <label class="money">Year 5<input class="other-cash" type="range" min="0" max="1000000" step="1000" value="0"></label>
           </div>
-        </section>
+        </details>
       </aside>
 
       <section class="results">
-        <div class="summary-grid">
-          <article class="panel metric primary">
-            <div class="label">Total compensation <span>Years 1–5</span></div>
-            <div class="value" id="fiveYearTotal">—</div>
-            <div class="sub" id="fiveYearTargetGap">Compared with your five-year target</div>
-          </article>
-          <article class="panel metric">
-            <div class="label">Year 1 compensation</div>
-            <div class="value" id="yearOneTotal">—</div>
-            <div class="sub">Includes all Year 1 components</div>
-          </article>
-          <article class="panel metric">
-            <div class="label">Average annual compensation</div>
-            <div class="value" id="averageTotal">—</div>
-            <div class="sub" id="fourYearAverage">Four-year average: —</div>
-          </article>
-        </div>
-
         <article class="panel chart-panel">
           <div class="panel-head">
             <div>
@@ -888,7 +1018,7 @@
       </section>
     </div>
 
-    <section class="panel scenario-explorer">
+    <section class="panel scenario-explorer" id="simulationWorkspace" role="tabpanel" aria-labelledby="simulationTab" hidden>
       <div class="scenario-header">
         <div>
           <p class="eyebrow">Scenario explorer</p>
@@ -898,26 +1028,26 @@
       </div>
 
       <div class="scenario-config">
-        <div class="range-card">
-          <h3>Base salary range</h3>
+        <details class="range-card" open>
+          <summary><h3>Base salary range</h3></summary>
           <label>Minimum<input id="scenarioBaseMin" type="range" min="0" max="500000" step="5000" value="150000"></label>
           <label>Maximum<input id="scenarioBaseMax" type="range" min="0" max="500000" step="5000" value="300000"></label>
           <label>Increment<input id="scenarioBaseStep" type="range" min="5000" max="100000" step="5000" value="25000"></label>
-        </div>
+        </details>
 
-        <div class="range-card">
-          <h3>Initial equity grant range</h3>
+        <details class="range-card">
+          <summary><h3>Initial equity grant range</h3></summary>
           <label>Minimum<input id="scenarioEquityMin" type="range" min="0" max="5000000" step="10000" value="400000"></label>
           <label>Maximum<input id="scenarioEquityMax" type="range" min="0" max="5000000" step="10000" value="1200000"></label>
           <label>Increment<input id="scenarioEquityStep" type="range" min="10000" max="500000" step="10000" value="100000"></label>
-        </div>
+        </details>
 
-        <div class="range-card">
-          <h3>Year 1 signing bonus range</h3>
+        <details class="range-card">
+          <summary><h3>Year 1 signing bonus range</h3></summary>
           <label>Minimum<input id="scenarioSignonMin" type="range" min="0" max="1000000" step="5000" value="0"></label>
           <label>Maximum<input id="scenarioSignonMax" type="range" min="0" max="1000000" step="5000" value="300000"></label>
           <label>Increment<input id="scenarioSignonStep" type="range" min="5000" max="250000" step="5000" value="50000"></label>
-        </div>
+        </details>
       </div>
 
       <div class="scenario-options">
@@ -1182,14 +1312,39 @@
         const progress = max === min ? 0 : ((value - min) / (max - min)) * 100;
         slider.style.setProperty("--progress", `${progress}%`);
 
-        let output = slider.closest("label")?.querySelector(".slider-value");
-        if (!output && slider.closest("label")) {
-          output = document.createElement("output");
-          output.className = "slider-value";
-          slider.closest("label").appendChild(output);
+        const label = slider.closest("label");
+        label?.querySelector(".slider-value")?.remove();
+        let editor = label?.querySelector(".slider-number-input");
+        if (!editor && label) {
+          editor = document.createElement("input");
+          editor.type = "number";
+          editor.className = "slider-number-input";
+          editor.min = slider.min;
+          editor.step = slider.step || "any";
+          editor.setAttribute("aria-label", `Enter value for ${label.firstChild?.textContent?.trim() || "slider"}`);
+          const applyEnteredValue = () => {
+            const entered = Number(editor.value);
+            if (!Number.isFinite(entered)) {
+              editor.value = slider.value;
+              return;
+            }
+            if (entered > Number(slider.max)) slider.max = String(entered);
+            slider.value = String(Math.max(Number(slider.min) || 0, entered));
+            editor.value = slider.value;
+            slider.dispatchEvent(new Event("input", { bubbles: true }));
+          };
+          editor.addEventListener("change", applyEnteredValue);
+          editor.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              applyEnteredValue();
+              editor.blur();
+            }
+          });
+          label.appendChild(editor);
         }
-        if (output) {
-          output.textContent = slider.classList.contains("percent") ? `${value}%` : compactMoney(value);
+        if (editor && document.activeElement !== editor) {
+          editor.value = String(value);
         }
       });
     }
@@ -1457,6 +1612,24 @@
       $("#scenarioError").textContent = message;
     }
 
+    function setWorkspace(workspace) {
+      const showSimulation = workspace === "simulation";
+      $("#compensationWorkspace").hidden = showSimulation;
+      $("#simulationWorkspace").hidden = !showSimulation;
+      $$(".workspace-switch button").forEach((button) => {
+        const active = button.dataset.workspace === workspace;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", String(active));
+        button.tabIndex = active ? 0 : -1;
+      });
+      if (showSimulation && lastScenarioState) {
+        requestAnimationFrame(() => {
+          drawScenarioScatter(lastScenarioState);
+          drawScenarioHistogram(lastScenarioState);
+        });
+      }
+    }
+
     function reset() {
       invalidateScenarioResults("Inputs were reset. Run the scenarios again to refresh the results.");
       $("#currency").value = defaults.currency;
@@ -1474,6 +1647,9 @@
 
     $$("input, select").forEach((input) => input.addEventListener("input", calculate));
     $("#resetButton").addEventListener("click", reset);
+    $$(".workspace-switch button").forEach((button) => {
+      button.addEventListener("click", () => setWorkspace(button.dataset.workspace));
+    });
     $("#scenarioStart").addEventListener("click", runScenarioExplorer);
     $$(".sort-button").forEach((button) => button.addEventListener("click", () => {
       const nextKey = button.dataset.sort;
